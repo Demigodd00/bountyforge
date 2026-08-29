@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+artifacts/
+.opencode/
+.env
+.env.local
+.env.*
+!.env.example
+.vercel/
+
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+!apps/bountyforge-web/next-env.d.ts

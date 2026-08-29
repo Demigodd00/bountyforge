@@ -1,0 +1,155 @@
+{
+  "app": "BountyForge",
+  "version": "3.1.0",
+  "verified_on": "2026-08-29",
+  "release_scope": "StudioNet test release; simulated GEN only",
+  "submission_readiness": "live lifecycle verified; public repository publication and CI pending",
+  "contract_address": "0xf650cB608E02Ec03A0e524078A14C504b56e5c5B",
+  "contract_deployment_transaction": "0xb9831e1636210a00cb9f765b9a1728402059fba54e24a6453c9ddb5715e4cee7",
+  "source_sha256_lf_normalized": "ff8eeae368d5896eefb1d51eea95781158e9bcd1070aeedc703cd82ee54ca3ca",
+  "treasury": "0x1adf37F016384714F683CaC4d0a261A6d4e27033",
+  "funding_model": "WITHDRAWABLE_DEPOSIT_CREDIT_V1",
+  "previous_contract_check": {
+    "address": "0xc531F8744430DB8b59FEc4180E43aDE3F427392c",
+    "all_stats_zero": true,
+    "native_balance_atto": "0",
+    "migration_required_at_check": false,
+    "checked_on": "2026-08-28"
+  },
+  "checks": {
+    "genvm_lint": {
+      "result": "passed",
+      "public_methods": 23,
+      "view_methods": 10,
+      "write_methods": 13,
+      "constructor_parameters": 5,
+      "warning": "A newer pinned runner is available; the validated release retains its concrete runner hash."
+    },
+    "direct_tests": {
+      "result": "passed",
+      "repository_total": 123,
+      "bountyforge_total": 65
+    },
+    "deployment_unit_tests": {
+      "result": "passed",
+      "total": 25
+    },
+    "frontend_tests": {
+      "result": "passed",
+      "total": 69
+    },
+    "typescript": "passed",
+    "production_build_with_release_address": "passed",
+    "production_dependency_audit": "No known vulnerabilities found",
+    "live_integration": {
+      "result": "passed",
+      "total": 3,
+      "duration_seconds": 1128.14
+    },
+    "deployment_verification": {
+      "receipt": "FINALIZED",
+      "execution": "SUCCESS",
+      "source_matches": true,
+      "config_and_treasury_match": true
+    },
+    "ci_workflow": "Updated locally; no GitHub commit or workflow run was performed."
+  },
+  "live_test_evidence": {
+    "network": "studionet",
+    "chain_id": 61999,
+    "simulated_funds": true,
+    "cancellation": {
+      "contract": "0x45eC51A0683D3d1F3EA5eA46E665AB9868939B8A",
+      "deployment": "0x45af013948d5520c70b1cd58b28c0c9d21a01267ec570c218a6090f8d4be0c3d",
+      "deposit": "0x96bcae3f688b6ab057a66ce00ff2adedeeab330270dd715c913650efc610b5eb",
+      "create": "0x1d84237c945f3185b890d1a188e96ae128660f38d10b92c818a5dc7d204df293",
+      "foreign_cancel": "0xeb6d72bb7ecddd0ef62c001cd59d3f9d789e4447f811a5277f7b32fd711f5289",
+      "cancel": "0x1a345c0509449a94789aab733104596b8cc30376f9b339e3befdb1ac873854a9",
+      "double_cancel": "0x4d7f3e6e361175e228f2637ee9830bae86167938bc06ccf1e27601a3f9e24c80",
+      "actual_balance_assertions": "passed"
+    },
+    "expiry": {
+      "contract": "0x6A6Ca2431354D5818039E5f76A0d2d0029cA0005",
+      "deployment": "0x93a1e0e67c4c9a3cc27b9ad58ab5fbf0345343f19f2609ebb3de8cc8e65463cb",
+      "deposit": "0x2eb720dad0c6918be68e63449a009237fd297dc003fa58a97f0b90392abed42b",
+      "create": "0xec7eddee65036a5e0ff2c92e2a93b5070b18dd97d21213d0daacb16928f99369",
+      "early_expire": "0x63652eac6b8ba18f6dcb08d5ea0122584ca53e730bb2f521dbca2f6cf91d2434",
+      "expire": "0xd648b3059ab29fe241b16da28f0bf9c1a9167f7bbc4f8502ae957540ab964026",
+      "actual_balance_assertions": "passed"
+    },
+    "rejected_claim_credit": {
+      "contract": "0x46E7aFd65D6b8FFedCe2f325aEe20224b468E0Bf",
+      "deployment": "0xa695596d8863613bcc59c4937b19b1993bcb7a6e7849d039809e5ebb2805666b",
+      "reward_deposit": "0xc1739f9a077e541c022b8aad232114c5ad0ca9884c093908a3b0bee903747a7b",
+      "create": "0x247391bd83acd94b07061139528248de76bdf850c0ee3d642d0fff656627190d",
+      "stake_deposit": "0xe208fc9a9de820fe08a670aa49ea187a4d4bd64ae552cd2a3078a9981e95603c",
+      "rejected_submission": "0x4862adef8d9af72cdcf70cc3b12d7e504a2990b5dde90e0b412069f36573e9a0",
+      "foreign_withdrawal": "0xc56797ba123642abfa6515ee03ba18c20bb43c70bc12409fce507ffe83b9fdea",
+      "owner_withdrawal": "0xa4a799ab01c4a4f86544336d113b627b5d8d01a0bc9869cb0a7b4eb753b74b15",
+      "double_withdrawal": "0x2f8eb6ffa9d743728d654e8f5828696f9ea6716b64437bae0a3d3bea211cdc43",
+      "cancel_after_withdrawal": "0xcc81395766db488b42954d21c6399d2cefe1251729e9b18f40714a6ec2eae5b9",
+      "actual_balance_assertions": "passed",
+      "identity_rejection_reason": "missing BountyForge-Wallet marker",
+      "reserved_claims": 0,
+      "remaining_active_slots": 8
+    },
+    "integration_result": {
+      "passed": 3,
+      "seconds": 1128.14
+    }
+  },
+  "hosted_two_wallet_acceptance": {
+    "result": "passed",
+    "verified_on": "2026-08-29",
+    "bounty_id": "bf-1",
+    "issue_url": "https://github.com/Demigodd00/bountyforge/issues/1",
+    "pr_url": "https://github.com/Demigodd00/bountyforge/pull/2",
+    "pr_head_sha": "7ad2d999fd091784ec8ec3254c0b156a67475087",
+    "sponsor": "0x1adf37F016384714F683CaC4d0a261A6d4e27033",
+    "hunter": "0xA1e3A40bdC63305b5C6fd86276bBE967c5D78698",
+    "reward_atto": "1000000000000000",
+    "stake_atto": "1000000000000000",
+    "bounty_status": "SETTLED",
+    "claim_status": "PAID",
+    "verdict": "FIXES_ISSUE",
+    "confidence_bucket": "90",
+    "reason": "README.md adds a single ## StudioNet acceptance heading with the exact required sentence, only modifies README, and preserves title/description.",
+    "source_digest": "b699169b5f2816e47f6284334e33f28d54b8df274214820fa94d6e3b4886909e",
+    "contract_balance_before_payout_atto": "2000000000000000",
+    "contract_balance_after_payout_atto": "0",
+    "hunter_balance_before_payout_atto": "9000000000000000",
+    "hunter_balance_after_payout_atto": "11000000000000000",
+    "hunter_app_credit_after_payout_atto": "0",
+    "final_stats": {
+      "total_created": "1",
+      "total_claims_submitted": "1",
+      "total_accepted": "1",
+      "total_settled": "1",
+      "total_payout_atto": "1000000000000000"
+    }
+  },
+  "frontend_publication": {
+    "status": "READY",
+    "production_url": "https://bountyforge-web.vercel.app",
+    "deployment_url": "https://bountyforge-ov8kaj3k9-demi17.vercel.app",
+    "deployment_id": "dpl_j9caajgCTKydGcbrYCVtgJobLyKy",
+    "verified_contract_version": "3.1.0",
+    "public_routes_http_status": 200,
+    "browser_console_errors_during_final_check": 0,
+    "public_form_draft_retention": "passed",
+    "public_form_title_limit": 80,
+    "public_dialog_width_px": 530,
+    "public_viewport_width_px": 639,
+    "horizontal_overflow": false
+  },
+  "remaining_acceptance": [
+    "Live appeal and sponsor challenge outcomes remain optional extended-path evidence; automated coverage exists"
+  ],
+  "limitations": [
+    "Engineering remediation and tests are not an independent security audit or mainnet approval.",
+    "Direct tests use controlled GitHub and LLM fixtures; the live public-PR case verifies rejection, not a successful jury review.",
+    "Only small complete public text diffs are supported; private repositories and automated review keepers are out of scope.",
+    "Withdrawable credit covers normal app operations, not arbitrary direct transfers or infrastructure-level deposit failures.",
+    "Automatic transaction recovery requires a returned hash. If a wallet fails before returning one, inspect its activity before retrying."
+  ]
+}

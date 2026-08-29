@@ -1,0 +1,13 @@
+{
+  "contract": "BountyForge",
+  "network": "studionet",
+  "address": "0xc531F8744430DB8b59FEc4180E43aDE3F427392c",
+  "transaction_hash": "0x61efea8839106f5149ce9378c7545aaa56f84e32e651eb8df9cc251719cee4fb",
+  "deployer": "0x1adf37F016384714F683CaC4d0a261A6d4e27033",
+  "constructor_args": {
+    "fee_bps": 0,
+    "challenge_window_secs": 3600,
+    "appeal_window_secs": 86400
+  },
+  "deployed_at": "2026-08-28T16:31:10.515488+00:00"
+}

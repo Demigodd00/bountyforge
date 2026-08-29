@@ -1,0 +1,24 @@
+{
+  "contract": "BountyForge",
+  "version": "3.1.0",
+  "network": "studionet",
+  "address": "0xf650cB608E02Ec03A0e524078A14C504b56e5c5B",
+  "transaction_hash": "0xb9831e1636210a00cb9f765b9a1728402059fba54e24a6453c9ddb5715e4cee7",
+  "deployer": "0x12C91C47c09D8239a8C9851E6b6a6E91D06109bE",
+  "deployer_role": "deployment_only_no_privileged_access",
+  "signer_mode": "disposable_studionet_deployment_only",
+  "treasury": "0x1adf37F016384714F683CaC4d0a261A6d4e27033",
+  "constructor_args": {
+    "fee_bps": 0,
+    "challenge_window_secs": 3600,
+    "appeal_window_secs": 86400,
+    "review_window_secs": 86400,
+    "treasury_address": "0x1adf37F016384714F683CaC4d0a261A6d4e27033"
+  },
+  "source_sha256": "ff8eeae368d5896eefb1d51eea95781158e9bcd1070aeedc703cd82ee54ca3ca",
+  "receipt_status": "FINALIZED",
+  "execution_result": "SUCCESS",
+  "verified_source_and_config": true,
+  "deployed_at": "2026-08-28T20:18:20.039516+00:00",
+  "previous_address": "0xc531F8744430DB8b59FEc4180E43aDE3F427392c"
+}
