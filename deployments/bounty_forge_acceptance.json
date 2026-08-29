@@ -3,7 +3,7 @@
   "version": "3.1.0",
   "verified_on": "2026-08-29",
   "release_scope": "StudioNet test release; simulated GEN only",
-  "submission_readiness": "live lifecycle verified; public repository publication and CI pending",
+  "submission_readiness": "ready_for_genlayer_projects_submission",
   "contract_address": "0xf650cB608E02Ec03A0e524078A14C504b56e5c5B",
   "contract_deployment_transaction": "0xb9831e1636210a00cb9f765b9a1728402059fba54e24a6453c9ddb5715e4cee7",
   "source_sha256_lf_normalized": "ff8eeae368d5896eefb1d51eea95781158e9bcd1070aeedc703cd82ee54ca3ca",
@@ -52,7 +52,16 @@
       "source_matches": true,
       "config_and_treasury_match": true
     },
-    "ci_workflow": "Updated locally; no GitHub commit or workflow run was performed."
+    "ci_workflow": {
+      "result": "passed",
+      "repository": "https://github.com/Demigodd00/bountyforge",
+      "commit": "8262a473fe513134f7ce742be4394825d78f5fce",
+      "run_id": "33267823322",
+      "run_url": "https://github.com/Demigodd00/bountyforge/actions/runs/33267823322",
+      "frontend_job": "passed",
+      "contract_job": "passed",
+      "studionet_integration_job": "skipped_on_push; live integration evidence recorded separately"
+    }
   },
   "live_test_evidence": {
     "network": "studionet",

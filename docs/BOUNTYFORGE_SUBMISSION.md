@@ -15,6 +15,8 @@ BountyForge is a GenLayer-native marketplace that turns public GitHub issues int
 
 ## Verified evidence
 
+- Public release commit: `8262a473fe513134f7ce742be4394825d78f5fce`
+- Public CI: `https://github.com/Demigodd00/bountyforge/actions/runs/33267823322` (`passed`)
 - Contract version: `3.1.0`
 - Funding model: `WITHDRAWABLE_DEPOSIT_CREDIT_V1`
 - Live bounty: `bf-1`, `SETTLED`
