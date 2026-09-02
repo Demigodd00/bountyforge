@@ -29,6 +29,7 @@ CI is linked by the repository badge and can also be reviewed at `https://github
 - Contract: `0xCD7E3bad31F1C26F139907621A569940C2AD70Bd`, version `3.1.1`
 - Contract source SHA-256: `56de7fb1b41a93bb42de48d43fddbefbf60fbaac340dc17345fa752db6536bb3`
 - Frontend: `3.4.0`
+- Verified app source: `d43c3a62d14a8f6c00442efa80887eb58ac22de6`; [CI passed](https://github.com/Demigodd00/bountyforge/actions/runs/33664417621); Vercel deployment `dpl_7RLEkc7TfN3662ZiKcw8TDnzww2g` is `READY`
 - Canonical lifecycle: `bf-4 SETTLED`; claim 0 `PAID`; `FIXES_ISSUE`, confidence 90
 - Local gates: GenVM lint and typecheck; 65 direct tests; 25 deployment tests; 79 frontend tests; TypeScript; production build; dependency audit
 - Live adapter gate: deposit, five-argument zero-value creation, finalized state, and cancellation/refund passed on the canonical contract

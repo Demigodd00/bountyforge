@@ -8,6 +8,8 @@ The frontend verifies all 23 deployed methods before signing. `deposit()` is the
 
 The contract now passes `genvm-lint check` and `genvm-lint typecheck` with zero diagnostics. The mobile `/admin` layout also constrains long onchain addresses to the viewport and has a permanent regression test.
 
+Verified app source `d43c3a62d14a8f6c00442efa80887eb58ac22de6` passed [public CI](https://github.com/Demigodd00/bountyforge/actions/runs/33664417621) and was built from `main` as Vercel production deployment `dpl_7RLEkc7TfN3662ZiKcw8TDnzww2g`. The stable alias exposes release 3.4, the canonical contract, and the settled proof; all six public product routes returned HTTP 200, `/post` loaded without a stale transaction lock, and `/admin` had no horizontal overflow at 375px.
+
 ## Canonical frontend-generated proof
 
 The production frontend adapter ran against the exact contract above:

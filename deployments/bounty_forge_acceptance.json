@@ -4,7 +4,7 @@
   "frontend_version": "3.4.0",
   "verified_on": "2026-09-02",
   "release_scope": "StudioNet test release; simulated GEN only",
-  "submission_readiness": "awaiting_public_ci_and_vercel_verification",
+  "submission_readiness": "ready_for_genlayer_projects_resubmission",
   "contract": {
     "network": "studionet",
     "chain_id": 61999,
@@ -109,7 +109,27 @@
     "git_repository": "https://github.com/Demigodd00/bountyforge",
     "production_branch": "main",
     "root_directory": "apps/bountyforge-web",
-    "status": "awaiting release commit"
+    "verified_app_source_commit": "d43c3a62d14a8f6c00442efa80887eb58ac22de6",
+    "ci_run": "https://github.com/Demigodd00/bountyforge/actions/runs/33664417621",
+    "ci_status": "success",
+    "deployment_id": "dpl_7RLEkc7TfN3662ZiKcw8TDnzww2g",
+    "immutable_url": "https://bountyforge-fpb1z7icy-demi17.vercel.app",
+    "status": "READY",
+    "routes_http_200": [
+      "/",
+      "/bounties",
+      "/post",
+      "/dashboard",
+      "/admin",
+      "/bounties/bf-4"
+    ],
+    "browser_verification": {
+      "release_label": "3.4",
+      "contract_address_and_version": "canonical address and 3.1.1 visible",
+      "settled_evidence": "bf-4 SETTLED; claim 0 PAID",
+      "post_page_stuck_marker": false,
+      "mobile_admin_horizontal_overflow_at_375px": false
+    }
   },
   "limitations": [
     "This is a StudioNet demonstration using simulated GEN, not a mainnet deployment or independent security audit.",

@@ -5,8 +5,17 @@
   "project_id": "prj_BfG4MuxI8kiV8NBCnMRLSfP2VOB3",
   "scope": "demi17",
   "production_url": "https://bountyforge-web.vercel.app",
-  "deployment_status": "AWAITING_RELEASE_COMMIT",
+  "deployment_status": "READY",
   "deployment_strategy": "stable production alias tracks Demigodd00/bountyforge main; immutable deployment details are recorded after verification",
+  "verified_release": {
+    "source_commit": "d43c3a62d14a8f6c00442efa80887eb58ac22de6",
+    "ci_run": "https://github.com/Demigodd00/bountyforge/actions/runs/33664417621",
+    "ci_status": "success",
+    "deployment_id": "dpl_7RLEkc7TfN3662ZiKcw8TDnzww2g",
+    "immutable_url": "https://bountyforge-fpb1z7icy-demi17.vercel.app",
+    "deployment_status": "READY",
+    "build_source": "github.com/Demigodd00/bountyforge; branch main; commit d43c3a6"
+  },
   "git_connection": {
     "repository": "Demigodd00/bountyforge",
     "repository_id": 1350586793,
@@ -29,7 +38,7 @@
     "private_keys_in_vercel": false
   },
   "verification": {
-    "production_build": "passed locally",
+    "production_build": "passed locally and on Vercel",
     "frontend_tests": "79 passed",
     "typescript": "passed",
     "production_dependency_audit": "No known vulnerabilities found",
@@ -37,7 +46,9 @@
     "canonical_two_wallet_full_lifecycle": "bf-4 SETTLED; claim 0 PAID; contract balance delta zero",
     "runtime_schema_guard": "all 23 expected public methods verified before wallet signatures",
     "nonpayable_value_omission": "create_bounty and all other business methods omit value; only deposit includes value",
-    "mobile_admin_overflow_regression": "passed locally; production browser verification pending"
+    "mobile_admin_overflow_regression": "passed locally and on production at 375px with no horizontal overflow",
+    "production_routes": "six public product routes returned HTTP 200",
+    "production_state": "release 3.4; canonical contract 3.1.1; bf-4 SETTLED; claim 0 PAID; post page not stuck"
   },
   "acceptance_record": "deployments/bounty_forge_acceptance.json"
 }

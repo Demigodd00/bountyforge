@@ -12,7 +12,7 @@ Verified on 2026-09-02:
 - Funding: withdrawable app balance; only `deposit()` accepts attached GEN.
 - Treasury: `0xA1e3A40bdC63305b5C6fd86276bBE967c5D78698`; fee 0%, challenge/appeal/review windows 5 minutes each.
 - Deployment transaction: `0x35680db1278be15b0841e21ccb995e5cc80b0ba19c6c61ebaad23962489c9184`, finalized with successful execution.
-- Hosting: the stable production alias tracks `Demigodd00/bountyforge` branch `main`, root `apps/bountyforge-web`. The verified immutable release build is recorded in `deployments/bounty_forge_vercel.json` after GitHub CI and production checks complete.
+- Hosting: the stable production alias tracks `Demigodd00/bountyforge` branch `main`, root `apps/bountyforge-web`. Verified app source `d43c3a62d14a8f6c00442efa80887eb58ac22de6` passed public CI and is preserved as production deployment `dpl_7RLEkc7TfN3662ZiKcw8TDnzww2g` in `deployments/bounty_forge_vercel.json`.
 - Canonical frontend-client smoke: deposit, zero-value five-argument creation, and cancellation/refund all finalized successfully on this exact address.
 - Canonical two-wallet acceptance: `bf-4` is `SETTLED` and claim 0 is `PAID` after public issue/PR evidence aligned to this contract, a 90-confidence `FIXES_ISSUE` verdict, challenge-window finalization, and hunter payout. The hunter balance increased by the 0.001 GEN reward after recovering the 0.001 GEN stake; both participant credits ended at zero and contract balance delta for the lifecycle was zero.
 - Records: `deployments/bounty_forge_studionet.json`, `deployments/bounty_forge_vercel.json`, and `deployments/bounty_forge_acceptance.json`. Prior records are preserved under `deployments/history/`.
