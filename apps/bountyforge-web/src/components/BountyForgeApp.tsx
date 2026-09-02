@@ -479,7 +479,7 @@ export default function BountyForgeApp({ view = "explore", bountyId = "" }: Boun
       </fieldset></form>}
     </Modal>}
 
-    <footer className="footer shell"><div className="brand"><span className="brand-mark">BF</span><span>Bounty<span className="accent">Forge</span></span></div><span>StudioNet release 3.2 · GitHub work. Onchain rewards.</span><a href="/admin">Protocol status ↗</a></footer>
+    <footer className="footer shell"><div className="brand"><span className="brand-mark">BF</span><span>Bounty<span className="accent">Forge</span></span></div><span>StudioNet release 3.3 · GitHub work. Onchain rewards.</span><a href="/admin">Protocol status ↗</a></footer>
   </main>;
 }
 

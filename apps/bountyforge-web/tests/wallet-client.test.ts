@@ -3,7 +3,7 @@ import { ExecutionResult, TransactionStatus } from "genlayer-js/types";
 import type { EthereumProvider, TxProgress, WalletSession } from "../src/lib/contract";
 import { HASH, HUNTER, OTHER, bounty, claim, config } from "./fixtures";
 
-const sdk = vi.hoisted(() => ({ readContract: vi.fn(), writeContract: vi.fn(), waitForTransactionReceipt: vi.fn(), connect: vi.fn() }));
+const sdk = vi.hoisted(() => ({ readContract: vi.fn(), writeContract: vi.fn(), waitForTransactionReceipt: vi.fn(), getContractSchema: vi.fn(), connect: vi.fn() }));
 vi.mock("genlayer-js", () => ({ chains: { studionet: { id: 61999 } }, createClient: vi.fn(() => sdk) }));
 
 let api: typeof import("../src/lib/contract");
@@ -11,6 +11,34 @@ let provider: EthereumProvider;
 let wallet: WalletSession;
 const successfulReceipt = { statusName: TransactionStatus.FINALIZED, txExecutionResultName: ExecutionResult.FINISHED_WITH_RETURN };
 const input = () => ({ title: "Fix the theme", criteria: "Persist the selected theme after a reload.", issueUrl: "https://github.com/acme/widgets/issues/42", deadlineUnix: Math.floor(Date.now() / 1000) + 86400, potAtto: 10n ** 18n });
+const method = (params: string[][], readonly: boolean, payable?: boolean) => ({ params, kwparams: {}, readonly, ...(payable === undefined ? {} : { payable }) });
+const compatibleSchema = {
+  methods: {
+    appeal_claim: method([["bounty_id", "string"], ["claim_index", "int"]], false, false),
+    cancel_bounty: method([["bounty_id", "string"]], false, false),
+    challenge_claim: method([["bounty_id", "string"], ["statement", "string"]], false, false),
+    claim_payout: method([["bounty_id", "string"]], false, false),
+    create_bounty: method([["title", "string"], ["acceptance_criteria", "string"], ["issue_url", "string"], ["deadline_unix", "int"], ["pot_atto", "int"]], false, false),
+    deposit: method([], false, true),
+    expire_bounty: method([["bounty_id", "string"]], false, false),
+    finalize_bounty: method([["bounty_id", "string"]], false, false),
+    get_bounty: method([["bounty_id", "string"]], true),
+    get_claim: method([["bounty_id", "string"], ["index", "int"]], true),
+    get_claim_evidence: method([["bounty_id", "string"], ["index", "int"]], true),
+    get_config: method([], true),
+    get_credit: method([["user", "string"]], true),
+    get_stats: method([], true),
+    list_bounties: method([["offset", "int"], ["count", "int"]], true),
+    list_claims: method([["bounty_id", "string"], ["offset", "int"], ["count", "int"]], true),
+    list_hunter_claims: method([["user", "string"], ["offset", "int"], ["count", "int"]], true),
+    list_sponsor_bounties: method([["user", "string"], ["offset", "int"], ["count", "int"]], true),
+    release_rejected_stake: method([["bounty_id", "string"], ["claim_index", "int"]], false, false),
+    resolve_claim: method([["bounty_id", "string"], ["claim_index", "int"]], false, false),
+    submit_claim: method([["bounty_id", "string"], ["pr_url", "string"], ["pr_head_sha", "string"], ["github_login", "string"]], false, false),
+    timeout_claim: method([["bounty_id", "string"], ["claim_index", "int"]], false, false),
+    withdraw_credit: method([], false, false),
+  },
+};
 
 beforeEach(async () => {
   vi.resetModules(); vi.clearAllMocks();
@@ -23,6 +51,7 @@ beforeEach(async () => {
   });
   sdk.writeContract.mockResolvedValue(HASH);
   sdk.waitForTransactionReceipt.mockResolvedValue(successfulReceipt);
+  sdk.getContractSchema.mockResolvedValue(compatibleSchema);
   sdk.connect.mockResolvedValue(undefined);
   provider = { request: vi.fn(async ({ method }) => method === "eth_chainId" ? "0xf22f" : [HUNTER]) };
   api = await import("../src/lib/contract");
@@ -177,7 +206,11 @@ describe("transaction safety", () => {
     await api.createBounty(wallet, input(), (value) => progress.push(value));
     expect(sdk.readContract).toHaveBeenCalledWith(expect.objectContaining({ functionName: "get_config", transactionHashVariant: "latest-final" }));
     expect(sdk.writeContract).toHaveBeenCalledOnce();
-    expect(sdk.waitForTransactionReceipt).toHaveBeenCalledWith(expect.objectContaining({ status: TransactionStatus.FINALIZED }));
+    expect(sdk.waitForTransactionReceipt).toHaveBeenCalledWith(expect.objectContaining({
+      status: TransactionStatus.FINALIZED,
+      interval: 3000,
+      retries: 120,
+    }));
     expect(progress.at(-1)?.state).toBe("confirmed");
     expect(api.getPendingTransaction()).toBeNull();
   });
@@ -206,6 +239,34 @@ describe("transaction safety", () => {
     await expect(api.createBounty(wallet, input(), (value) => progress.push(value))).rejects.toThrow("Contract execution failed");
     expect(progress.at(-1)).toMatchObject({ state: "failed", hash: HASH });
     expect(api.getPendingTransaction()).toBeNull();
+  });
+  it("accepts the raw snake-case StudioNet receipt returned by genlayer-js", async () => {
+    sdk.waitForTransactionReceipt.mockResolvedValue({
+      status_name: TransactionStatus.FINALIZED,
+      consensus_data: { leader_receipt: [{ mode: "leader", execution_result: "SUCCESS", result: { status: "return", payload: null } }] },
+    });
+    const progress: TxProgress[] = [];
+    await expect(api.createBounty(wallet, input(), (value) => progress.push(value))).resolves.toBe(HASH);
+    expect(progress.at(-1)).toMatchObject({ state: "confirmed", hash: HASH });
+    expect(api.getPendingTransaction()).toBeNull();
+  });
+  it("surfaces a contract error from a raw snake-case StudioNet receipt", async () => {
+    sdk.waitForTransactionReceipt.mockResolvedValue({
+      status_name: TransactionStatus.FINALIZED,
+      consensus_data: { leader_receipt: [{ mode: "leader", execution_result: "ERROR", genvm_result: { stderr: "insufficient available balance" }, result: { status: "contract_error" } }] },
+    });
+    const progress: TxProgress[] = [];
+    await expect(api.createBounty(wallet, input(), (value) => progress.push(value))).rejects.toThrow("insufficient available balance");
+    expect(progress.at(-1)).toMatchObject({ state: "failed", hash: HASH });
+    expect(api.getPendingTransaction()).toBeNull();
+  });
+  it("refuses to sign when the configured contract ABI differs", async () => {
+    sdk.getContractSchema.mockResolvedValue({
+      ...compatibleSchema,
+      methods: { ...compatibleSchema.methods, create_bounty: { ...compatibleSchema.methods.create_bounty, payable: true } },
+    });
+    await expect(api.createBounty(wallet, input(), vi.fn())).rejects.toThrow("ABI mismatch");
+    expect(sdk.writeContract).not.toHaveBeenCalled();
   });
   it.each([undefined, ExecutionResult.NOT_VOTED, "UNKNOWN_RESULT"])("keeps the hash when finalized execution is not established (%s)", async (result) => {
     sdk.waitForTransactionReceipt.mockResolvedValue({ statusName: TransactionStatus.FINALIZED, txExecutionResultName: result });

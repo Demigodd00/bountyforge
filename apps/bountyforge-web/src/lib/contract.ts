@@ -58,11 +58,39 @@ export const PAGE_SIZE = 25;
 const readClient = createClient({ chain: chains.studionet });
 const pendingKey = "bountyforge:pending:" + chains.studionet.id + ":" + CONTRACT_ADDRESS.toLowerCase();
 const RECOVERY_LOOKUP_TIMEOUT_MS = 12_000;
-const WRITE_CONFIRMATION_TIMEOUT_MS = 60_000;
+const FINALITY_POLL_INTERVAL_MS = 3_000;
+const WRITE_CONFIRMATION_TIMEOUT_MS = 420_000;
 let memoryPending: PendingTransaction | null = null;
 let storageUsable = true;
 let writeInFlight = false;
 const WALLET_DISCOVERY_MS = 75;
+let interfaceVerification: Promise<void> | null = null;
+
+const EXPECTED_CONTRACT_SCHEMA: Record<string, { readonly: boolean; payable?: boolean; params: readonly (readonly [string, string])[] }> = {
+  appeal_claim: { readonly: false, payable: false, params: [["bounty_id", "string"], ["claim_index", "int"]] },
+  cancel_bounty: { readonly: false, payable: false, params: [["bounty_id", "string"]] },
+  challenge_claim: { readonly: false, payable: false, params: [["bounty_id", "string"], ["statement", "string"]] },
+  claim_payout: { readonly: false, payable: false, params: [["bounty_id", "string"]] },
+  create_bounty: { readonly: false, payable: false, params: [["title", "string"], ["acceptance_criteria", "string"], ["issue_url", "string"], ["deadline_unix", "int"], ["pot_atto", "int"]] },
+  deposit: { readonly: false, payable: true, params: [] },
+  expire_bounty: { readonly: false, payable: false, params: [["bounty_id", "string"]] },
+  finalize_bounty: { readonly: false, payable: false, params: [["bounty_id", "string"]] },
+  get_bounty: { readonly: true, params: [["bounty_id", "string"]] },
+  get_claim: { readonly: true, params: [["bounty_id", "string"], ["index", "int"]] },
+  get_claim_evidence: { readonly: true, params: [["bounty_id", "string"], ["index", "int"]] },
+  get_config: { readonly: true, params: [] },
+  get_credit: { readonly: true, params: [["user", "string"]] },
+  get_stats: { readonly: true, params: [] },
+  list_bounties: { readonly: true, params: [["offset", "int"], ["count", "int"]] },
+  list_claims: { readonly: true, params: [["bounty_id", "string"], ["offset", "int"], ["count", "int"]] },
+  list_hunter_claims: { readonly: true, params: [["user", "string"], ["offset", "int"], ["count", "int"]] },
+  list_sponsor_bounties: { readonly: true, params: [["user", "string"], ["offset", "int"], ["count", "int"]] },
+  release_rejected_stake: { readonly: false, payable: false, params: [["bounty_id", "string"], ["claim_index", "int"]] },
+  resolve_claim: { readonly: false, payable: false, params: [["bounty_id", "string"], ["claim_index", "int"]] },
+  submit_claim: { readonly: false, payable: false, params: [["bounty_id", "string"], ["pr_url", "string"], ["pr_head_sha", "string"], ["github_login", "string"]] },
+  timeout_claim: { readonly: false, payable: false, params: [["bounty_id", "string"], ["claim_index", "int"]] },
+  withdraw_credit: { readonly: false, payable: false, params: [] },
+};
 
 function contractAddress(): Address {
   if (!CONTRACT_READY) throw new Error("BountyForge contract not configured.");
@@ -72,6 +100,34 @@ function contractAddress(): Address {
 function asRecord(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("The contract returned an invalid response.");
   return value as Record<string, unknown>;
+}
+
+function recordOrNull(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
+}
+
+async function loadAndVerifyContractInterface(): Promise<void> {
+  const schema = asRecord(await readClient.getContractSchema(contractAddress()));
+  const methods = asRecord(schema.methods);
+  for (const [name, expected] of Object.entries(EXPECTED_CONTRACT_SCHEMA)) {
+    const actual = recordOrNull(methods[name]);
+    if (!actual
+      || actual.readonly !== expected.readonly
+      || (expected.payable !== undefined && actual.payable !== expected.payable)
+      || JSON.stringify(actual.params) !== JSON.stringify(expected.params)) {
+      throw new Error(`Configured BountyForge contract ABI mismatch at ${name}. Check the contract address before signing.`);
+    }
+  }
+}
+
+export async function verifyContractInterface(): Promise<void> {
+  if (!interfaceVerification) {
+    interfaceVerification = loadAndVerifyContractInterface().catch((error) => {
+      interfaceVerification = null;
+      throw error;
+    });
+  }
+  return interfaceVerification;
 }
 
 async function read<T>(functionName: string, args: unknown[] = []): Promise<T> {
@@ -370,6 +426,46 @@ async function pendingEffectApplied(pending: PendingTransaction): Promise<boolea
 
 class ExecutionFailure extends Error {}
 
+function receiptStatus(receipt: unknown): string | undefined {
+  const value = recordOrNull(receipt);
+  const status = value?.statusName ?? value?.status_name;
+  return typeof status === "string" ? status : undefined;
+}
+
+function leaderReceipt(receipt: unknown): Record<string, unknown> | null {
+  const value = recordOrNull(receipt);
+  const consensus = recordOrNull(value?.consensusData ?? value?.consensus_data);
+  const candidates = consensus?.leaderReceipt ?? consensus?.leader_receipt;
+  if (!Array.isArray(candidates)) return recordOrNull(candidates);
+  const records = candidates.map(recordOrNull).filter((item): item is Record<string, unknown> => item !== null);
+  return [...records].reverse().find((item) => item.mode === "leader") ?? records.at(-1) ?? null;
+}
+
+function receiptExecution(receipt: unknown): ExecutionResult | undefined {
+  const value = recordOrNull(receipt);
+  const direct = value?.txExecutionResultName ?? value?.tx_execution_result_name;
+  if (direct === ExecutionResult.FINISHED_WITH_RETURN || direct === ExecutionResult.FINISHED_WITH_ERROR) return direct;
+  const leader = leaderReceipt(receipt);
+  const execution = typeof leader?.execution_result === "string" ? leader.execution_result.toUpperCase() : "";
+  if (execution === "SUCCESS") return ExecutionResult.FINISHED_WITH_RETURN;
+  if (execution === "ERROR" || execution === "FAILURE") return ExecutionResult.FINISHED_WITH_ERROR;
+  const result = recordOrNull(leader?.result);
+  if (result?.status === "return") return ExecutionResult.FINISHED_WITH_RETURN;
+  if (result?.status === "contract_error" || result?.status === "error") return ExecutionResult.FINISHED_WITH_ERROR;
+  return undefined;
+}
+
+function receiptFailureMessage(receipt: unknown): string {
+  const value = recordOrNull(receipt);
+  if (typeof value?.error === "string" && value.error.trim()) return value.error;
+  const leader = leaderReceipt(receipt);
+  const genvm = recordOrNull(leader?.genvm_result);
+  for (const candidate of [genvm?.stderr, genvm?.error_description, recordOrNull(leader?.result)?.payload]) {
+    if (typeof candidate === "string" && candidate.trim()) return candidate;
+  }
+  return "Contract execution failed. Your inputs are saved.";
+}
+
 function bounded<T>(work: Promise<T>, timeoutMs: number, message: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
@@ -382,14 +478,20 @@ function bounded<T>(work: Promise<T>, timeoutMs: number, message: string): Promi
 
 async function waitForSuccess(pending: PendingTransaction, onProgress: ProgressHandler, retries = 120): Promise<void> {
   onProgress({ state: "finalizing", label: "Waiting for GenLayer confirmation", hash: pending.hash });
-  const receipt = await readClient.waitForTransactionReceipt({ hash: pending.hash as never, status: TransactionStatus.FINALIZED, retries });
-  if (receipt.statusName !== TransactionStatus.FINALIZED) throw new Error("Transaction is not finalized yet.");
-  if (receipt.txExecutionResultName !== ExecutionResult.FINISHED_WITH_RETURN && receipt.txExecutionResultName !== ExecutionResult.FINISHED_WITH_ERROR) {
+  const receipt = await readClient.waitForTransactionReceipt({
+    hash: pending.hash as never,
+    status: TransactionStatus.FINALIZED,
+    interval: FINALITY_POLL_INTERVAL_MS,
+    retries,
+  });
+  if (receiptStatus(receipt) !== TransactionStatus.FINALIZED) throw new Error("Transaction is not finalized yet.");
+  const execution = receiptExecution(receipt);
+  if (execution !== ExecutionResult.FINISHED_WITH_RETURN && execution !== ExecutionResult.FINISHED_WITH_ERROR) {
     throw new Error("Execution result unavailable. Check status before retrying.");
   }
   savePending(null);
-  if (receipt.txExecutionResultName === ExecutionResult.FINISHED_WITH_ERROR) {
-    throw new ExecutionFailure(String(asRecord(receipt).error ?? "Contract execution failed. Your inputs are saved."));
+  if (execution === ExecutionResult.FINISHED_WITH_ERROR) {
+    throw new ExecutionFailure(receiptFailureMessage(receipt));
   }
   onProgress({ state: "confirmed", label: "Confirmed", hash: pending.hash });
 }
@@ -445,7 +547,7 @@ async function write(session: WalletSession, functionName: string, args: unknown
   let pending: PendingTransaction | null = null;
   try {
     onProgress({ state: "checking", label: "Checking wallet and contract" });
-    const config = await getConfig();
+    const [config] = await Promise.all([getConfig(), verifyContractInterface()]);
     assertCompatible(config);
     validate?.(config);
     const requiredCredit = spend === "stake" ? BigInt(config.claim_stake_atto) : spend;
@@ -462,7 +564,7 @@ async function write(session: WalletSession, functionName: string, args: unknown
     pending = { hash: String(hash), functionName, account: session.address, createdAt: Date.now(), effect };
     savePending(pending);
     onProgress({ state: "submitted", label: "Transaction submitted", hash: pending.hash });
-    try { await bounded(waitForSuccess(pending, onProgress, 10), WRITE_CONFIRMATION_TIMEOUT_MS, "Confirmation lookup timed out."); }
+    try { await bounded(waitForSuccess(pending, onProgress), WRITE_CONFIRMATION_TIMEOUT_MS, "Confirmation lookup timed out."); }
     catch (error) {
       if (!(error instanceof ExecutionFailure)
         && await bounded(confirmFromContractState(pending, onProgress), RECOVERY_LOOKUP_TIMEOUT_MS, "Contract-state lookup timed out.")) return pending.hash;

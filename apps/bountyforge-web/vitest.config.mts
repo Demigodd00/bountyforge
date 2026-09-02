@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
-    include: ["tests/**/*.test.{ts,tsx}"],
+    include: ["tests/*.test.{ts,tsx}"],
     env: { NEXT_PUBLIC_BOUNTYFORGE_ADDRESS: "0x1111111111111111111111111111111111111111" },
     testTimeout: 15000,
   },

@@ -4,15 +4,16 @@ This runbook separates the one-time contract deployment from public frontend hos
 
 ## Current StudioNet deployment
 
-Verified on 2026-08-29:
+Verified on 2026-09-02:
 
 - App: [bountyforge-web.vercel.app](https://bountyforge-web.vercel.app)
 - Read-only protocol console: [bountyforge-web.vercel.app/admin](https://bountyforge-web.vercel.app/admin)
-- Contract: `0xf650cB608E02Ec03A0e524078A14C504b56e5c5B`, version `3.1.0`, on StudioNet.
+- Contract: `0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8`, version `3.1.0`, on StudioNet.
 - Funding: withdrawable app balance; only `deposit()` accepts attached GEN.
-- Treasury: `0x1adf37F016384714F683CaC4d0a261A6d4e27033`; fee 0%, challenge window 1 hour, appeal/review windows 1 day.
-- Hosting deployment: `dpl_j9caajgCTKydGcbrYCVtgJobLyKy`, READY.
-- Hosted acceptance: `bf-1` completed the separate sponsor/hunter flow and is `SETTLED`; claim 0 is `PAID` after a GenLayer `FIXES_ISSUE` verdict.
+- Treasury: `0xA1e3A40bdC63305b5C6fd86276bBE967c5D78698`; fee 0%, challenge/appeal/review windows 5 minutes each.
+- Deployment transaction: `0xe3f33b86b2d623595af8b1f3ae483048f792571b3aad3ab9ac2540718f664ea1`, finalized successfully.
+- Hosting deployment: `dpl_8ueoREVY3WUTrESn8s4NKRJJMnsw`, READY and aliased to production.
+- Canonical frontend-client smoke: deposit, zero-value five-argument creation, and cancellation/refund all finalized successfully on this exact address.
 - Records: `deployments/bounty_forge_studionet.json`, `deployments/bounty_forge_vercel.json`, and `deployments/bounty_forge_acceptance.json`. Prior records are preserved under `deployments/history/`.
 
 This is a StudioNet development release, not a mainnet deployment. Vercel's production URL describes the hosting environment; it does not change the contract's network.
@@ -25,7 +26,7 @@ StudioNet is gasless for deployment. The contract has no admin-only signer privi
 
 ```powershell
 $env:BOUNTYFORGE_NETWORK="studionet"
-python scripts/deploy_bounty_forge.py 0 3600 86400 86400 --ephemeral-studionet-deployer --treasury 0x1adf37F016384714F683CaC4d0a261A6d4e27033
+python scripts/deploy_bounty_forge.py 0 300 300 300 --ephemeral-studionet-deployer --treasury 0xA1e3A40bdC63305b5C6fd86276bBE967c5D78698
 ```
 
 The public treasury receives protocol fees and final rejected stakes; the deployment signer has no retained privilege. Disposable mode is restricted to StudioNet and requires an explicit nonzero public treasury. Without that flag, the script uses `BOUNTYFORGE_PRIVATE_KEY` or hidden input for a recoverable signer. Never paste keys into chat or source files.
@@ -61,6 +62,14 @@ The repository includes `apps/bountyforge-web/vercel.json` with the install and 
 The first release was uploaded directly from the app folder before configuring the Git Root Directory. For future CLI uploads, stage only the allowlisted app files under `apps/bountyforge-web`, put the project link at the staging root, and inspect that file list before publishing. Vercel CLI 59.9 does not provide a dry-run flag. Do not upload the entire workspace. The app's `.vercelignore` excludes local environment files, dependency folders, and build output. The Vercel CLI may add a local OIDC token to `.env.local`; keep that file private and excluded from uploads and Git.
 
 After a deployment, open the production URL and verify the app loads live bounties, wallet connection switches to StudioNet, and `/admin` loads contract configuration. Loading the page alone does not verify wallet signing or contract write operations.
+
+Run the frontend-compatible canonical smoke before publishing. It verifies the network schema, lifecycle receipts, attached values, and finalized state using the same SDK version as the web app:
+
+```powershell
+cd apps/bountyforge-web
+$env:NEXT_PUBLIC_BOUNTYFORGE_ADDRESS="0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8"
+pnpm verify:studionet
+```
 
 ## Funding in v3.1
 

@@ -5,16 +5,16 @@
   "project_id": "prj_BfG4MuxI8kiV8NBCnMRLSfP2VOB3",
   "scope": "demi17",
   "production_url": "https://bountyforge-web.vercel.app",
-  "deployment_url": "https://bountyforge-2c0919r71-demi17.vercel.app",
-  "deployment_id": "dpl_8ueoREVY3WUTrESn8s4NKRJJMnsw",
+  "deployment_url": "https://bountyforge-17ywrq3d8-demi17.vercel.app",
+  "deployment_id": "dpl_DXzqCjruQJuXqyNBzNXK9JjkgjcQ",
   "deployment_status": "READY",
   "change_type": "canonical_contract_and_receipt_lifecycle_remediation",
   "release_readiness": "ready_for_studionet_resubmission",
   "release_review": "docs/BOUNTYFORGE_REVIEW.md",
   "previous_deployment": {
-    "id": "dpl_DXzqCjruQJuXqyNBzNXK9JjkgjcQ",
-    "url": "https://bountyforge-17ywrq3d8-demi17.vercel.app",
-    "archive": "deployments/history/bounty_forge_vercel_dpl_DXzqCjruQJuXqyNBzNXK9JjkgjcQ.json"
+    "id": "dpl_9o5wXqwTwHp4tPBtB2kTRshz6Gxu",
+    "url": "https://bountyforge-1lmp015hq-demi17.vercel.app",
+    "archive": "deployments/history/bounty_forge_vercel_dpl_9o5wXqwTwHp4tPBtB2kTRshz6Gxu.json"
   },
   "network": "studionet",
   "contract_address": "0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8",

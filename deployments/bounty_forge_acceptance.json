@@ -1,21 +1,20 @@
 {
   "app": "BountyForge",
   "version": "3.1.0",
-  "frontend_version": "3.2.0",
+  "frontend_version": "3.3.0",
   "verified_on": "2026-09-02",
   "release_scope": "StudioNet test release; simulated GEN only",
   "submission_readiness": "ready_for_genlayer_projects_submission",
-  "contract_address": "0xf650cB608E02Ec03A0e524078A14C504b56e5c5B",
-  "contract_deployment_transaction": "0xb9831e1636210a00cb9f765b9a1728402059fba54e24a6453c9ddb5715e4cee7",
+  "contract_address": "0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8",
+  "contract_deployment_transaction": "0xe3f33b86b2d623595af8b1f3ae483048f792571b3aad3ab9ac2540718f664ea1",
   "source_sha256_lf_normalized": "ff8eeae368d5896eefb1d51eea95781158e9bcd1070aeedc703cd82ee54ca3ca",
-  "treasury": "0x1adf37F016384714F683CaC4d0a261A6d4e27033",
+  "treasury": "0xA1e3A40bdC63305b5C6fd86276bBE967c5D78698",
   "funding_model": "WITHDRAWABLE_DEPOSIT_CREDIT_V1",
   "previous_contract_check": {
-    "address": "0xc531F8744430DB8b59FEc4180E43aDE3F427392c",
-    "all_stats_zero": true,
-    "native_balance_atto": "0",
-    "migration_required_at_check": false,
-    "checked_on": "2026-08-28"
+    "address": "0xf650cB608E02Ec03A0e524078A14C504b56e5c5B",
+    "status": "historical_full_lifecycle_release",
+    "migration_required_at_check": true,
+    "checked_on": "2026-09-02"
   },
   "checks": {
     "genvm_lint": {
@@ -37,7 +36,7 @@
     },
     "frontend_tests": {
       "result": "passed",
-      "total": 74
+      "total": 77
     },
     "typescript": "passed",
     "production_build_with_release_address": "passed",
@@ -57,6 +56,34 @@
       "five_argument_create": true,
       "create_attached_value_atto": "0",
       "authorization_and_refund_assertions": "passed"
+    },
+    "canonical_frontend_client_smoke": {
+      "result": "passed",
+      "contract": "0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8",
+      "sdk": "genlayer-js@1.1.8",
+      "schema_methods_verified": 23,
+      "deposit_transaction": "0x7cad6cd1a2920c22e7cf2bb6e5ed9ade9e579ad27ad0ae02c2a9d2d691fd1072",
+      "create_transaction": "0xa146fcb6e2919707d09a6d1d6e8620fd8604aa31b041dd147cc175d2dcd031e9",
+      "create_execution": "FINALIZED SUCCESS",
+      "create_argument_count": 5,
+      "create_attached_value_atto": "0",
+      "cancel_refund_transaction": "0xf047553099eb89e4c0be3abe5df703fa1c51486120887d848ad60d87452e3cfa",
+      "final_bounty_status": "CANCELLED",
+      "receipt_shapes_verified": "camelCase SDK and raw snake_case StudioNet"
+    },
+    "canonical_frontend_adapter_live_test": {
+      "result": "passed",
+      "duration_seconds": 130.43,
+      "contract": "0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8",
+      "test": "apps/bountyforge-web/tests/live/studionet-frontend-flow.test.ts",
+      "deposit_transaction": "0xa27f4d32be6e5f1642b5dad1b6e59ac7a8a05d3af51156f71f122b13fa02c04a",
+      "create_transaction": "0xfc521440a9486171c36d689b7154ef8b70b69fc80eaefc987218055c8272779e",
+      "create_execution": "FINALIZED SUCCESS",
+      "create_attached_value_atto": "0",
+      "bounty_id": "bf-2",
+      "cancel_refund_transaction": "0x02cbefbce9c97ee86a6cd885458cf86fe9b42406fb2655976e50c200391555d8",
+      "final_bounty_status": "CANCELLED",
+      "polling_regression": "reproduced premature timeout at ACCEPTED, then passed with 3000ms interval and 120 retries"
     },
     "deployment_verification": {
       "receipt": "FINALIZED",
@@ -121,6 +148,8 @@
   },
   "hosted_two_wallet_acceptance": {
     "result": "passed",
+    "scope": "historical lifecycle on previous v3.1 contract",
+    "contract": "0xf650cB608E02Ec03A0e524078A14C504b56e5c5B",
     "verified_on": "2026-08-29",
     "bounty_id": "bf-1",
     "issue_url": "https://github.com/Demigodd00/bountyforge/issues/1",
@@ -152,9 +181,9 @@
   "frontend_publication": {
     "status": "READY",
     "production_url": "https://bountyforge-web.vercel.app",
-    "deployment_url": "https://bountyforge-1lmp015hq-demi17.vercel.app",
-    "deployment_id": "dpl_9o5wXqwTwHp4tPBtB2kTRshz6Gxu",
-    "frontend_version": "3.2.0",
+    "deployment_url": "https://bountyforge-2c0919r71-demi17.vercel.app",
+    "deployment_id": "dpl_8ueoREVY3WUTrESn8s4NKRJJMnsw",
+    "frontend_version": "3.3.0",
     "verified_contract_version": "3.1.0",
     "public_routes_http_status": 200,
     "dedicated_routes": ["/", "/bounties", "/post", "/dashboard", "/bounties/bf-1", "/admin"],
@@ -162,6 +191,9 @@
     "html_cache_control": "no-store",
     "multi_wallet_eip6963_test": "passed",
     "nonpayable_value_omission_test": "passed",
+    "runtime_schema_guard": "all 23 methods verified before writes",
+    "raw_studionet_receipt_normalization": "passed",
+    "accepted_to_finalized_polling": "3000ms interval, 120 retries; live frontend adapter passed",
     "browser_console_errors_during_final_check": 0,
     "public_form_draft_retention": "passed",
     "public_form_title_limit": 80,

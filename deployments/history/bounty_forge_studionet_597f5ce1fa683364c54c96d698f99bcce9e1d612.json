@@ -2,9 +2,9 @@
   "contract": "BountyForge",
   "version": "3.1.0",
   "network": "studionet",
-  "address": "0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8",
-  "transaction_hash": "0xe3f33b86b2d623595af8b1f3ae483048f792571b3aad3ab9ac2540718f664ea1",
-  "deployer": "0xf682Bc7888961227D2c986e16A74110f4392779D",
+  "address": "0x597F5CE1fa683364C54C96D698f99BccE9e1d612",
+  "transaction_hash": "0x69277b9c4753bc694a5bf22e47012cc54c4a012b63b16705d272462d9c5d0d7c",
+  "deployer": "0x8E6bc54FaF3D0cA564561Ab8f15BF20Bb4c106eC",
   "deployer_role": "deployment_only_no_privileged_access",
   "signer_mode": "disposable_studionet_deployment_only",
   "treasury": "0xA1e3A40bdC63305b5C6fd86276bBE967c5D78698",
@@ -19,6 +19,6 @@
   "receipt_status": "FINALIZED",
   "execution_result": "SUCCESS",
   "verified_source_and_config": true,
-  "deployed_at": "2026-09-02T13:26:37.515723+00:00",
-  "previous_address": "0x597F5CE1fa683364C54C96D698f99BccE9e1d612"
+  "deployed_at": "2026-09-02T13:08:44.381837+00:00",
+  "previous_address": "0xf650cB608E02Ec03A0e524078A14C504b56e5c5B"
 }

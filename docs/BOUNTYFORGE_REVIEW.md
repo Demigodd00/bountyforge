@@ -1,8 +1,18 @@
-# BountyForge v3.2 steward remediation and release review
+# BountyForge v3.3 steward remediation and release review
 
-Updated: 2026-09-02. Contract v3.1 retains the previously verified GenLayer protocol. Frontend v3.2 addresses the three steward blockers reported after the first submission. This remains a StudioNet test release with the acceptance boundary below, not an independent security audit, mainnet approval, or guarantee of financial safety.
+Updated: 2026-09-02. Contract v3.1 retains the verified GenLayer protocol. Frontend v3.3 corrects the production contract/ABI mismatch and raw StudioNet receipt handling identified during the second steward review. This remains a StudioNet test release with the acceptance boundary below, not an independent security audit, mainnet approval, or guarantee of financial safety.
 
-## Steward-requested v3.2 remediation
+## Steward-requested v3.3 remediation
+
+| Steward blocker | v3.3 correction | Permanent proof |
+| --- | --- | --- |
+| Production still used the prior contract | Deployed one clean canonical contract and pinned its address in Vercel, CI, active deployment records, documentation, and tests | Deployment `0xe3f33b86b2d623595af8b1f3ae483048f792571b3aad3ab9ac2540718f664ea1`; address `0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8` |
+| Frontend ABI could drift from the configured address | Read and verify all 23 public method signatures from StudioNet before any write, including payable deposit and non-payable five-argument creation | ABI mismatch regression plus canonical `genlayer-js` schema verification |
+| Finalized transactions could appear unresolved | Normalize camel-case SDK receipts and raw snake-case StudioNet receipts; inspect the finalized leader execution result | Raw-success and raw-contract-error regression tests using observed StudioNet receipt shapes |
+| Deposit/create sequence was not proven on the production address | Repeatable frontend-client smoke enforces deposit finality and credit before a zero-value create, then verifies state and refund | Deposit `0x7cad…1072`, create `0xa146…31e9`, cancel `0xf047…3cfa`, all finalized successfully on the canonical address |
+| Client stopped polling while valid transactions were still accepted | Poll every three seconds for up to 120 attempts and retain the public hash throughout confirmation | Live production-adapter test initially reproduced the timeout at `ACCEPTED`, then passed deposit `0xa27f…c04a`, create `0xfc52…779e`, state reads, and refund `0x02cb…55d8` in 130.43 seconds |
+
+## Historical first steward remediation (v3.2)
 
 | Steward blocker | v3.2 correction | Permanent proof |
 | --- | --- | --- |
@@ -38,9 +48,9 @@ The deployment script now requires finalized successful execution, exact source,
 - GenVM lint passed: 23 public methods, including 10 views and 13 writes. The concrete runner remains pinned; the newer-runner notice is informational.
 - Repository direct tests: 123 passed, including 65 BountyForge cases. Deployment safeguards: 25 passed. Frontend tests: 69 passed. TypeScript, the production build with the new address, and the production dependency audit passed; the audit reported no known vulnerabilities.
 - Live StudioNet integration: 3 passed. Tests checked actual wallet and contract balances for cancellation, expiry, and withdrawal of unused credit after a real public PR failed wallet-identity validation. Unauthorized and duplicate withdrawals were rejected; escrow remained isolated.
-- Contract: `0xf650cB608E02Ec03A0e524078A14C504b56e5c5B`, version `3.1.0`. Deployment transaction: `0xb9831e1636210a00cb9f765b9a1728402059fba54e24a6453c9ddb5715e4cee7`, finalized with successful execution. The deployed source and requested settings were verified before activation.
+- Canonical contract: `0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8`, version `3.1.0`. Deployment transaction: `0xe3f33b86b2d623595af8b1f3ae483048f792571b3aad3ab9ac2540718f664ea1`, finalized with successful execution. The deployed source, schema, and requested settings were verified before activation.
 - Source SHA-256, with LF normalization: `ff8eeae368d5896eefb1d51eea95781158e9bcd1070aeedc703cd82ee54ca3ca`.
-- Treasury remains `0x1adf37F016384714F683CaC4d0a261A6d4e27033`; fee is 0%, challenge window is 1 hour, and appeal/review windows are 1 day. The previous contract had zero recorded activity and zero native balance before the switch. Its deployment record is preserved under `deployments/history/`.
+- Treasury is `0xA1e3A40bdC63305b5C6fd86276bBE967c5D78698`; fee is 0%, and challenge/appeal/review windows are five minutes each for StudioNet review. Previous deployment records are preserved under `deployments/history/`.
 - Vercel deployment `dpl_83v66nqWUEg9bGpEjUsepS4fPExp` is READY. Both public routes return HTTP 200. The upload contained 18 allowlisted app files, excluding local environment files, keys, dependencies, and unrelated workspace files. No Git commit or push was performed.
 - The 2026-08-29 recovery release culminated in Vercel deployment `dpl_j9caajgCTKydGcbrYCVtgJobLyKy`. Every new write now records an exact method-specific state fingerprint and uses bounded receipt plus finalized-state checks, so a successful StudioNet write can recover without a duplicate transaction when receipt polling lags. A hash-matched, user-confirmed clear control handles older markers that predate the fingerprints. All 69 frontend tests, TypeScript, the production build, and the production dependency audit passed; the StudioNet contract address and source are unchanged.
 - Final browser and direct contract checks confirmed version 3.1, the intended treasury, funding model, and exactly one live bounty. Separate sponsor and hunter wallets completed the hosted lifecycle for `bf-1`: GenLayer accepted PR #2 with a 90-confidence `FIXES_ISSUE` verdict, the award survived its challenge window, and the hunter finalized payout. Final state is `SETTLED`; claim 0 is `PAID`; the contract balance and hunter app credit are zero. The hunter balance increased by 0.002 GEN during payout, representing the returned 0.001 GEN stake plus the 0.001 GEN reward. No duplicate bounty or claim was created.

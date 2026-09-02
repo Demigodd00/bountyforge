@@ -9,9 +9,9 @@ AI-adjudicated open-source bounties, settled on GenLayer.
 - Create bounty: [bountyforge-web.vercel.app/post](https://bountyforge-web.vercel.app/post)
 - Wallet dashboard: [bountyforge-web.vercel.app/dashboard](https://bountyforge-web.vercel.app/dashboard)
 - Protocol console: [bountyforge-web.vercel.app/admin](https://bountyforge-web.vercel.app/admin)
-- StudioNet contract: `0xf650cB608E02Ec03A0e524078A14C504b56e5c5B`
+- StudioNet contract: `0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8`
 - Contract version: `3.1.0`
-- Frontend release: `3.2.0`
+- Frontend release: `3.3.0`
 
 > BountyForge is a StudioNet test release using simulated GEN. It is not a mainnet deployment or a guarantee of financial safety.
 
@@ -28,9 +28,11 @@ BountyForge turns a public GitHub issue into an onchain bounty:
 
 GenLayer is central to the workflow: the Intelligent Contract owns deposits, escrow, evidence capture, validator adjudication, queues, disputes, finality, and payout. The frontend only forms transactions and renders finalized state.
 
-Frontend release 3.2 separates the landing page, marketplace, creation flow, dashboard, and bounty details into dedicated routes. It discovers MetaMask with EIP-6963 when multiple wallets are installed, restores an already-authorized wallet without another prompt, and includes a transaction `value` field only for `deposit`. Every business action, including the five-argument `create_bounty`, omits attached GEN and spends recoverable app credit.
+Frontend release 3.3 pins the app to the canonical StudioNet deployment and verifies its complete public schema before allowing a wallet signature. It normalizes both typed camel-case receipts and the raw snake-case lifecycle fields returned by StudioNet, including the leader execution result. Only `deposit` carries GEN; the five-argument `create_bounty` and every other business action omit transaction value and spend recoverable app credit.
 
-## Verified hosted lifecycle
+The canonical release was exercised with the same `genlayer-js` client used by the web app: deposit `0x7cad6cd1a2920c22e7cf2bb6e5ed9ade9e579ad27ad0ae02c2a9d2d691fd1072`, zero-value creation `0xa146fcb6e2919707d09a6d1d6e8620fd8604aa31b041dd147cc175d2dcd031e9`, and cancellation/refund `0xf047553099eb89e4c0be3abe5df703fa1c51486120887d848ad60d87452e3cfa` all finalized with successful execution.
+
+## Historical hosted lifecycle on the prior v3.1 deployment
 
 On 29 August 2026, separate sponsor and hunter wallets completed the full production-frontend flow on StudioNet:
 
@@ -94,6 +96,13 @@ corepack pnpm typecheck
 corepack pnpm test
 corepack pnpm build
 corepack pnpm audit:prod
+```
+
+Canonical StudioNet transaction smoke test (uses a generated, disposable test actor and simulated GEN):
+
+```powershell
+$env:NEXT_PUBLIC_BOUNTYFORGE_ADDRESS="0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8"
+corepack pnpm verify:studionet
 ```
 
 Never put a private key in the frontend, Vercel, source files, issues, or chat. The frontend needs only the public contract address.
