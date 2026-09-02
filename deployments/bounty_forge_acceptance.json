@@ -46,7 +46,7 @@
     },
     "frontend_tests": {
       "result": "passed",
-      "total": 78
+      "total": 79
     },
     "typescript": "passed",
     "production_build": "passed; seven routes",

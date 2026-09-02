@@ -16,7 +16,7 @@ export default function LandingPage() {
       </div>
       <div className="hero-card"><div className="orbit orbit-one" /><div className="orbit orbit-two" />
         <div className="hero-card-inner">
-          <div className="card-top"><span>RELEASE 3.3</span><span className="live"><span className="pulse" />STUDIONET</span></div>
+          <div className="card-top"><span>RELEASE 3.4</span><span className="live"><span className="pulse" />STUDIONET</span></div>
           <div className="signal"><div className="signal-ring">✦</div><div><strong>Work with proof.</strong><p>Issue. PR. Commit. Wallet.</p></div></div>
           <div className="mini-stats"><div><b>01</b><span>fund issue</span></div><div><b>02</b><span>verify fix</span></div><div><b>03</b><span>settle reward</span></div></div>
         </div>
@@ -29,7 +29,7 @@ export default function LandingPage() {
       <Step number="03" title="Let GenLayer decide" text="Validators review live repository evidence. Challenges and appeals protect both sides." />
     </div></section>
 
-    <footer className="footer shell"><div className="brand"><span className="brand-mark">BF</span><span>Bounty<span className="accent">Forge</span></span></div><span>StudioNet release 3.3 · GitHub work. Onchain rewards.</span><a href="/admin">Protocol status ↗</a></footer>
+    <footer className="footer shell"><div className="brand"><span className="brand-mark">BF</span><span>Bounty<span className="accent">Forge</span></span></div><span>StudioNet release 3.4 · GitHub work. Onchain rewards.</span><a href="/admin">Protocol status ↗</a></footer>
   </main>;
 }
 

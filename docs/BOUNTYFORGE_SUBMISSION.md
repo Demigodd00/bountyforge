@@ -30,7 +30,7 @@ CI is linked by the repository badge and can also be reviewed at `https://github
 - Contract source SHA-256: `56de7fb1b41a93bb42de48d43fddbefbf60fbaac340dc17345fa752db6536bb3`
 - Frontend: `3.4.0`
 - Canonical lifecycle: `bf-4 SETTLED`; claim 0 `PAID`; `FIXES_ISSUE`, confidence 90
-- Local gates: GenVM lint and typecheck; 65 direct tests; 25 deployment tests; 78 frontend tests; TypeScript; production build; dependency audit
+- Local gates: GenVM lint and typecheck; 65 direct tests; 25 deployment tests; 79 frontend tests; TypeScript; production build; dependency audit
 - Live adapter gate: deposit, five-argument zero-value creation, finalized state, and cancellation/refund passed on the canonical contract
 
 The submission is a StudioNet project demonstration, not a mainnet or financial-safety claim.

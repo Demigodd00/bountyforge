@@ -30,7 +30,7 @@
   },
   "verification": {
     "production_build": "passed locally",
-    "frontend_tests": "78 passed",
+    "frontend_tests": "79 passed",
     "typescript": "passed",
     "production_dependency_audit": "No known vulnerabilities found",
     "canonical_frontend_adapter_test": "passed on StudioNet in 133.78 seconds",

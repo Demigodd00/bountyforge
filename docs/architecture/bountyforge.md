@@ -1,6 +1,6 @@
 # BountyForge release architecture
 
-BountyForge contract v3.1 and frontend v3.3 form a GenLayer-native settlement protocol for public GitHub work. The contract owns recoverable deposits, escrow, verified claim identity, immutable evidence snapshots, validator agreement, FIFO review, appeal/challenge windows, and terminal payout state. The web app forms transactions and displays finalized state; it never decides whether work is complete.
+BountyForge contract v3.1.1 and frontend v3.4 form a GenLayer-native settlement protocol for public GitHub work. The contract owns recoverable deposits, escrow, verified claim identity, immutable evidence snapshots, validator agreement, FIFO review, appeal/challenge windows, and terminal payout state. The web app forms transactions and displays finalized state; it never decides whether work is complete.
 
 ## Recoverable funding
 
