@@ -213,8 +213,11 @@
   "frontend_publication": {
     "status": "READY",
     "production_url": "https://bountyforge-web.vercel.app",
-    "deployment_url": "https://bountyforge-2c0919r71-demi17.vercel.app",
-    "deployment_id": "dpl_8ueoREVY3WUTrESn8s4NKRJJMnsw",
+    "deployment_strategy": "stable production alias tracks public main",
+    "verified_release_deployment_url": "https://bountyforge-2c0919r71-demi17.vercel.app",
+    "verified_release_deployment_id": "dpl_8ueoREVY3WUTrESn8s4NKRJJMnsw",
+    "last_observed_alias_deployment_url": "https://bountyforge-nrxncb3s0-demi17.vercel.app",
+    "last_observed_alias_deployment_id": "dpl_62ueNUDeVQLEiNiXUVSJM2AK26at",
     "frontend_version": "3.3.0",
     "verified_contract_version": "3.1.0",
     "public_routes_http_status": 200,
@@ -238,7 +241,7 @@
   ],
   "limitations": [
     "Engineering remediation and tests are not an independent security audit or mainnet approval.",
-    "Direct tests use controlled GitHub and LLM fixtures; the live public-PR case verifies rejection, not a successful jury review.",
+    "The canonical public-PR happy path is live-verified, but model decisions remain probabilistic and are not a guarantee of correctness.",
     "Only small complete public text diffs are supported; private repositories and automated review keepers are out of scope.",
     "Withdrawable credit covers normal app operations, not arbitrary direct transfers or infrastructure-level deposit failures.",
     "Automatic transaction recovery requires a returned hash. If a wallet fails before returning one, inspect its activity before retrying."

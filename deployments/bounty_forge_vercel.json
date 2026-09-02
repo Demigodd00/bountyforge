@@ -5,9 +5,19 @@
   "project_id": "prj_BfG4MuxI8kiV8NBCnMRLSfP2VOB3",
   "scope": "demi17",
   "production_url": "https://bountyforge-web.vercel.app",
-  "deployment_url": "https://bountyforge-2c0919r71-demi17.vercel.app",
-  "deployment_id": "dpl_8ueoREVY3WUTrESn8s4NKRJJMnsw",
   "deployment_status": "READY",
+  "deployment_strategy": "stable production alias tracks the public main branch; individual Vercel deployment IDs are immutable verification snapshots",
+  "verified_release_deployment": {
+    "id": "dpl_8ueoREVY3WUTrESn8s4NKRJJMnsw",
+    "url": "https://bountyforge-2c0919r71-demi17.vercel.app",
+    "status": "READY"
+  },
+  "last_observed_production_alias": {
+    "id": "dpl_62ueNUDeVQLEiNiXUVSJM2AK26at",
+    "url": "https://bountyforge-nrxncb3s0-demi17.vercel.app",
+    "status": "READY",
+    "observed_on": "2026-09-02"
+  },
   "change_type": "canonical_contract_and_receipt_lifecycle_remediation",
   "release_readiness": "ready_for_studionet_resubmission",
   "release_review": "docs/BOUNTYFORGE_REVIEW.md",
