@@ -2,14 +2,15 @@
 
 ## Root cause and correction
 
-The earlier v3.2 response was incomplete: Vercel remained configured for the prior contract while its transaction proof came from a disposable integration deployment. The client also checked only the camel-case receipt properties declared by `genlayer-js`, although StudioNet currently returns raw lifecycle and leader execution fields in snake case.
+The earlier v3.2 response was incomplete: Vercel remained configured for the prior contract while its transaction proof came from a disposable integration deployment. The client also checked only the camel-case receipt properties declared by `genlayer-js`, although StudioNet currently returns raw lifecycle and leader execution fields in snake case. Finally, the Vercel project was still Git-connected to the older `Demigodd00/demigodd00-genlayer-apps` repository, allowing unrelated automatic builds to replace the production alias.
 
-Release 3.3 corrects both problems:
+Release 3.3 corrects all three problems:
 
 1. The frontend, CI, deployment records, and reviewer evidence all use one canonical StudioNet contract: `0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8`.
 2. Before any wallet signature, the frontend reads that address's network schema and verifies all 23 public methods, including payable `deposit()` and non-payable five-argument `create_bounty(title, acceptance_criteria, issue_url, deadline_unix, pot_atto)`.
 3. Receipt handling accepts the SDK's typed camel-case form and StudioNet's raw snake-case form, then checks the finalized leader execution result. A finalized contract error is never reported as success.
 4. The transaction sequence is enforced as deposit first, wait for finalized successful execution and available credit, then call `create_bounty` with all five arguments and no `value` property.
+5. Vercel is connected to `Demigodd00/bountyforge`, production branch `main`, with root directory `apps/bountyforge-web`. The incorrect auto-deployment was removed from the production alias and all six product routes were rechecked.
 
 ## Canonical deployment
 

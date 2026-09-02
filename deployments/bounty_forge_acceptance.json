@@ -213,11 +213,17 @@
   "frontend_publication": {
     "status": "READY",
     "production_url": "https://bountyforge-web.vercel.app",
-    "deployment_strategy": "stable production alias tracks public main",
+    "deployment_strategy": "stable production alias tracks Demigodd00/bountyforge main",
     "verified_release_deployment_url": "https://bountyforge-2c0919r71-demi17.vercel.app",
     "verified_release_deployment_id": "dpl_8ueoREVY3WUTrESn8s4NKRJJMnsw",
-    "last_observed_alias_deployment_url": "https://bountyforge-nrxncb3s0-demi17.vercel.app",
-    "last_observed_alias_deployment_id": "dpl_62ueNUDeVQLEiNiXUVSJM2AK26at",
+    "git_connection": {
+      "repository": "Demigodd00/bountyforge",
+      "repository_id": 1350586793,
+      "production_branch": "main",
+      "root_directory": "apps/bountyforge-web",
+      "result": "verified through Vercel project API"
+    },
+    "wrong_repository_alias_incident": "dpl_62ueNUDeVQLEiNiXUVSJM2AK26at from Demigodd00/demigodd00-genlayer-apps was removed from the production alias",
     "frontend_version": "3.3.0",
     "verified_contract_version": "3.1.0",
     "public_routes_http_status": 200,
