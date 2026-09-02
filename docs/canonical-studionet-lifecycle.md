@@ -2,4 +2,4 @@
 
 BountyForge canonical end-to-end lifecycle passed.
 
-Contract: `0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8`
+Contract: `0xCD7E3bad31F1C26F139907621A569940C2AD70Bd`
