@@ -5,7 +5,7 @@ export const HUNTER: Address = "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 export const OTHER: Address = "0xcccccccccccccccccccccccccccccccccccccccc";
 export const HASH = "0x" + "d".repeat(64);
 export const config: ProtocolConfig = {
-  version: "3.1.0", evidence_schema: "bountyforge-evidence-v3", funding_model: "WITHDRAWABLE_DEPOSIT_CREDIT_V1",
+  version: "3.1.1", evidence_schema: "bountyforge-evidence-v3", funding_model: "WITHDRAWABLE_DEPOSIT_CREDIT_V1",
   adjudication_policy: "COMPARATIVE_CONSENSUS_ON_VERIFIED_IMMUTABLE_EVIDENCE",
   treasury: SPONSOR, fee_bps: "0", claim_stake_atto: "1000000000000000",
   min_pot_atto: "1000000000000000", max_pot_atto: "100000000000000000000",

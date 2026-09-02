@@ -2,7 +2,7 @@
 
 ## Supported release
 
-BountyForge `3.1.0` on StudioNet is the supported test release. StudioNet uses simulated GEN; this repository does not claim mainnet readiness or independent audit coverage.
+BountyForge `3.1.1` on StudioNet is the supported test release. StudioNet uses simulated GEN; this repository does not claim mainnet readiness or independent audit coverage.
 
 ## Reporting a vulnerability
 

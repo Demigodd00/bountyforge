@@ -1,61 +1,46 @@
-# BountyForge v3.3 resubmission
+# BountyForge steward resubmission
 
-## Root cause and correction
+## What was corrected
 
-The earlier v3.2 response was incomplete: Vercel remained configured for the prior contract while its transaction proof came from a disposable integration deployment. The client also checked only the camel-case receipt properties declared by `genlayer-js`, although StudioNet currently returns raw lifecycle and leader execution fields in snake case. Finally, the Vercel project was still Git-connected to the older `Demigodd00/demigodd00-genlayer-apps` repository, allowing unrelated automatic builds to replace the production alias.
+The production frontend, CI configuration, deployment records, tests, and reviewer evidence now reference one canonical StudioNet contract: `0xCD7E3bad31F1C26F139907621A569940C2AD70Bd` (version `3.1.1`). Its deployment transaction is `0x35680db1278be15b0841e21ccb995e5cc80b0ba19c6c61ebaad23962489c9184`, finalized with successful execution. The deployed source exactly matches SHA-256 `56de7fb1b41a93bb42de48d43fddbefbf60fbaac340dc17345fa752db6536bb3`.
 
-Release 3.3 corrects all three problems:
+The frontend verifies all 23 deployed methods before signing. `deposit()` is the only payable method. It waits for finalized successful execution and visible app credit before calling non-payable `create_bounty(title, acceptance_criteria, issue_url, deadline_unix, pot_atto)` with five arguments and no transaction `value`. Receipt handling supports both SDK camel-case and StudioNet snake-case lifecycle fields and verifies the leader execution result. A finalized contract error is never shown as success.
 
-1. The frontend, CI, deployment records, and reviewer evidence all use one canonical StudioNet contract: `0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8`.
-2. Before any wallet signature, the frontend reads that address's network schema and verifies all 23 public methods, including payable `deposit()` and non-payable five-argument `create_bounty(title, acceptance_criteria, issue_url, deadline_unix, pot_atto)`.
-3. Receipt handling accepts the SDK's typed camel-case form and StudioNet's raw snake-case form, then checks the finalized leader execution result. A finalized contract error is never reported as success.
-4. The transaction sequence is enforced as deposit first, wait for finalized successful execution and available credit, then call `create_bounty` with all five arguments and no `value` property.
-5. Vercel is connected to `Demigodd00/bountyforge`, production branch `main`, with root directory `apps/bountyforge-web`. The incorrect auto-deployment was removed from the production alias and all six product routes were rechecked.
+The contract now passes `genvm-lint check` and `genvm-lint typecheck` with zero diagnostics. The mobile `/admin` layout also constrains long onchain addresses to the viewport and has a permanent regression test.
 
-## Canonical deployment
+## Canonical frontend-generated proof
 
-- Contract: `0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8`
-- Deployment: `0xe3f33b86b2d623595af8b1f3ae483048f792571b3aad3ab9ac2540718f664ea1`
-- Contract version: `3.1.0`
-- Source SHA-256: `ff8eeae368d5896eefb1d51eea95781158e9bcd1070aeedc703cd82ee54ca3ca`
-- Funding model: `WITHDRAWABLE_DEPOSIT_CREDIT_V1`
-- Treasury: `0xA1e3A40bdC63305b5C6fd86276bBE967c5D78698`
-- Challenge, appeal, and review windows: 300 seconds each
+The production frontend adapter ran against the exact contract above:
 
-The deployment receipt finalized successfully. The deployed source, configuration, treasury, and schema were read back from the same address before activation.
+- Deposit: `0x3de624bdf84ab0f8dcbf4c318cb10756fd7eb96cd10884906a70b77b0a71137a`
+- Five-argument creation with attached value `0`: `0x10e4607dbc7a53f9b162d824776456b653b3c592694deed72d5d50e4b06e660b`
+- Created bounty: `bf-3`
+- Cancellation/refund: `0x8f09c329ae1d80cd523814c84d64f44cfbd4d7c2b9ed49192b2ede55e69d1202`
+- Result: every write finalized with successful execution; `bf-3` ended `CANCELLED`
 
-## Frontend-compatible StudioNet proof
+## Canonical end-to-end proof
 
-The repeatable `pnpm verify:studionet` check uses the production dependency `genlayer-js@1.1.8`, a generated disposable test actor, and the exact request shapes used by the web app. Against the canonical contract it verified:
+Two disposable StudioNet wallets completed the full workflow against the same contract using public [issue #3](https://github.com/Demigodd00/bountyforge/issues/3) and pinned [PR #4](https://github.com/Demigodd00/bountyforge/pull/4):
 
-- Deposit: `0x7cad6cd1a2920c22e7cf2bb6e5ed9ade9e579ad27ad0ae02c2a9d2d691fd1072` — `FINALIZED`, leader execution successful, value `0.001 GEN`.
-- Create: `0xa146fcb6e2919707d09a6d1d6e8620fd8604aa31b041dd147cc175d2dcd031e9` — `FINALIZED`, leader execution successful, five arguments, attached value `0 GEN`; finalized state contained `bf-1` and consumed the actor's app credit.
-- Cancellation/refund: `0xf047553099eb89e4c0be3abe5df703fa1c51486120887d848ad60d87452e3cfa` — `FINALIZED`, leader execution successful; `bf-1` became `CANCELLED` and its escrow was returned.
+| Stage | Transaction |
+| --- | --- |
+| Sponsor deposit | `0xab5aa4db4035b35edd24d73c11aabe589e230863bb9e77373aebd90b38ac9fcd` |
+| Create `bf-4` | `0xf59202e7af58f1d9bfbe77a4e4c87c78848511f2ebd4eaad5986569946629724` |
+| Hunter stake deposit | `0xc9178c70052a25573b5b58307e0fbee6eb4467c2ad0b46cc7406f284a23b1705` |
+| Capture aligned claim evidence | `0x63aa0c456764ea29dbcdeb161377749012a31118831f0ec18bcf4e8e3d8917cf` |
+| GenLayer adjudication | `0x25edc48e489f72dee061ac55f4f94b2192bca041069357565bc160cc677d27e4` |
+| Finalize after challenge window | `0x9df8fac04803cf93aa0c6d75c9340b083383fd077239dacbca4413fded72dc99` |
+| Hunter payout | `0x95389bbc5086182d02ee47c9d4cd3fa0c8b2b9221de845bf254bf803df6d22c8` |
 
-The script is at `apps/bountyforge-web/scripts/verify-studionet-flow.mjs` and does not persist or expose its generated private key.
-
-The stronger live test at `apps/bountyforge-web/tests/live/studionet-frontend-flow.test.ts` imports the production frontend adapter itself. On the same canonical address it passed deposit `0xa27f4d32be6e5f1642b5dad1b6e59ac7a8a05d3af51156f71f122b13fa02c04a`, zero-value creation `0xfc521440a9486171c36d689b7154ef8b70b69fc80eaefc987218055c8272779e`, finalized-state reads for `bf-2`, and cancellation/refund `0x02cbefbce9c97ee86a6cd885458cf86fe9b42406fb2655976e50c200391555d8`. This test first exposed the premature polling timeout at `ACCEPTED`; after the fix it completed in 130.43 seconds.
-
-## Canonical two-wallet end-to-end proof
-
-On 2 September 2026, isolated sponsor and hunter wallets completed the entire production-contract lifecycle using public [issue #3](https://github.com/Demigodd00/bountyforge/issues/3) and [PR #4](https://github.com/Demigodd00/bountyforge/pull/4):
-
-- Sponsor deposit: `0xad36cf60766eac72c95884eea0a13b8cee9c60ef02af7ea64abb3a04908325f7`
-- Five-argument, zero-value bounty creation: `0xe21c89080066b655441c2a041677a84b216fdbbb535e0d0a0fc990724c15b0e4`
-- Hunter stake deposit: `0x01a7aa553d490b38dbf30af881fc28df3ab348b70de6d7cc386d4245411f48e4`
-- Zero-value claim and immutable evidence capture: `0x4103079f6d20b81a548f2f29bc557f1c1f652afe0adfa7ca6993eea1a729b287`
-- GenLayer adjudication: `0xe882c3d933caf4d9b897ece39bb6085de59accb94145f18a6f28d1bcc52dd9c8`, `FIXES_ISSUE`, confidence 100
-- Finalization after the configured five-minute challenge window: `0x27fe9e8b6a8b06cad9d6e564813e54f5de02d357cb71e685d0f58bda8d4b19d3`
-- Hunter payout: `0x7de9369de7b95e421fcee7ff68ef664332c109636175b84093e2234ac32a698e`
-
-Every contract transaction reached `FINALIZED` with successful leader execution. Bounty `bf-3` ended `SETTLED`, claim 0 ended `PAID`, the hunter balance increased by exactly 0.002 GEN for returned stake plus reward, and the contract balance plus both app credits ended at zero. The temporary public issue and unmerged PR were closed after the contract had captured immutable evidence and payout was verified. Disposable wallet keys remained only in memory and were cleared after the run.
+Every transaction above reached `FINALIZED` with successful leader execution. `create_bounty` and every other non-deposit action attached zero GEN. Issue #3 and PR #4 both name the canonical contract, and evidence pins PR head `337ab6934eb9aafb591eb765cc636f6a0228a17d`. The verdict was `FIXES_ISSUE` at confidence 90. Final state is bounty `SETTLED`, claim 0 `PAID`; the hunter recovered the 0.001 GEN stake and received the 0.001 GEN reward. Both participant app-credit balances are zero and the lifecycle's contract-balance delta is zero.
 
 ## Reviewer retest
 
-1. Open `https://bountyforge-web.vercel.app/admin` and confirm the contract address above, version 3.1.0, recoverable deposit-credit funding, and 300-second windows.
-2. Open `https://bountyforge-web.vercel.app/post` and connect MetaMask on StudioNet.
-3. Complete **Step 1 · Deposit** and wait for the displayed app balance.
-4. Complete **Step 2 · Create bounty with 0 GEN attached**. The wallet request must show zero attached GEN.
-5. Confirm the transaction reaches finalized successful execution and the new bounty opens at `/bounties/bf-N`.
+1. Open `https://bountyforge-web.vercel.app/admin` and confirm the address above, version `3.1.1`, withdrawable app balance, 0% fee, and 300-second review/appeal/challenge windows.
+2. Open `https://bountyforge-web.vercel.app/bounties/bf-4` and confirm `SETTLED`, claim 0 `PAID`, and the public issue/PR evidence.
+3. Open `https://bountyforge-web.vercel.app/post`, connect MetaMask on StudioNet, complete Step 1 deposit, then Step 2 creation. The second transaction must show 0 GEN attached.
+4. Review the contract and deployment in the StudioNet explorer:
+   - `https://explorer-studio.genlayer.com/address/0xCD7E3bad31F1C26F139907621A569940C2AD70Bd`
+   - `https://explorer-studio.genlayer.com/tx/0x35680db1278be15b0841e21ccb995e5cc80b0ba19c6c61ebaad23962489c9184`
 
-StudioNet uses simulated GEN. BountyForge never requests or stores a private key in the browser, repository, or Vercel.
+This is a StudioNet test release using simulated GEN, not a mainnet deployment or security-audit claim.

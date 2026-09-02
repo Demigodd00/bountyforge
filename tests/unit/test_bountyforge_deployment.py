@@ -131,7 +131,7 @@ def test_release_pointer_changes_only_after_all_verification(monkeypatch, tmp_pa
     client.wait_for_transaction_receipt.return_value = receipt(result="ERROR" if failure == "execution" else "SUCCESS")
     client.provider.make_request.return_value = {"result": base64.b64encode(b"different\n" if failure == "source" else b"validated contract\n").decode()}
     client.read_contract.return_value = {
-        "version": "2.0.0" if failure == "config" else "3.1.0",
+        "version": "2.0.0" if failure == "config" else "3.1.1",
         "funding_model": "WITHDRAWABLE_DEPOSIT_CREDIT_V1",
         "evidence_schema": "bountyforge-evidence-v3", "fee_bps": "0",
         "challenge_window_secs": "3600", "appeal_window_secs": "86400",

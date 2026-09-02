@@ -38,7 +38,7 @@ const numericPolicy = [
 ];
 
 export function isCompatibleConfig(config: ProtocolConfig | null): boolean {
-  return Boolean(config && config.version === "3.1.0"
+  return Boolean(config && config.version === "3.1.1"
     && config.funding_model === "WITHDRAWABLE_DEPOSIT_CREDIT_V1"
     && config.evidence_schema === "bountyforge-evidence-v3"
     && config.adjudication_policy === "COMPARATIVE_CONSENSUS_ON_VERIFIED_IMMUTABLE_EVIDENCE"

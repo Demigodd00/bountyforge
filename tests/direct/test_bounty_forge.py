@@ -557,7 +557,7 @@ def test_validator_rejects_leader_error_while_own_fetch_succeeds(
 def test_config_exposes_policy_and_limits(direct_deploy):
     contract = _deploy(direct_deploy)
     config = contract.get_config()
-    assert config["version"] == "3.1.0"
+    assert config["version"] == "3.1.1"
     assert config["review_window_secs"] == str(DAY)
     assert config["max_title_chars"] == "80"
     assert config["max_criteria_chars"] == "600"

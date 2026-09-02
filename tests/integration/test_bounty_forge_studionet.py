@@ -70,7 +70,7 @@ def _deploy():
     assert receipt.get("status_name") == "FINALIZED"
     contract = factory.build_contract(extract_contract_address(receipt), account=alice)
     config = _read(contract.get_config())
-    assert config["version"] == "3.1.0"
+    assert config["version"] == "3.1.1"
     assert config["funding_model"] == "WITHDRAWABLE_DEPOSIT_CREDIT_V1"
     assert config["evidence_schema"] == "bountyforge-evidence-v3"
     assert config["review_window_secs"] == "300"
@@ -133,7 +133,7 @@ def test_expire_refund_path_on_studionet():
         # outage. Expiry is permissionless; no original wallet key is needed.
         contract = get_contract_factory("BountyForge").build_contract(resume_address, account=Account.create())
         bounty = _read(contract.get_bounty(args=["bf-1"]))
-        assert _read(contract.get_config())["version"] == "3.1.0"
+        assert _read(contract.get_config())["version"] == "3.1.1"
         assert bounty["title"] == "Document the storage layout"
         assert bounty["status"] == "OPEN" and bounty["claim_count"] == "0"
         assert int(bounty["deadline_unix"]) < time.time()

@@ -83,7 +83,7 @@ async function main() {
     throw new Error("The canonical contract ABI does not match the frontend transaction flow.");
   }
   const config = await read("get_config");
-  if (config.version !== "3.1.0" || config.funding_model !== "WITHDRAWABLE_DEPOSIT_CREDIT_V1") {
+  if (config.version !== "3.1.1" || config.funding_model !== "WITHDRAWABLE_DEPOSIT_CREDIT_V1") {
     throw new Error(`Unexpected canonical contract config: ${json(config)}`);
   }
   console.log(json({ phase: "contract_verified", depositPayable: true, createPayable: false, createParams: createSchema.params, config }));

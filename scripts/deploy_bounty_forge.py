@@ -173,7 +173,7 @@ def main() -> None:
         transaction_hash_variant=TransactionHashVariant.LATEST_FINAL,
     )
     expected = {
-        "version": "3.1.0", "evidence_schema": "bountyforge-evidence-v3", "funding_model": "WITHDRAWABLE_DEPOSIT_CREDIT_V1",
+        "version": "3.1.1", "evidence_schema": "bountyforge-evidence-v3", "funding_model": "WITHDRAWABLE_DEPOSIT_CREDIT_V1",
         "fee_bps": str(args.fee_bps), "challenge_window_secs": str(args.challenge_window_secs),
         "appeal_window_secs": str(args.appeal_window_secs), "review_window_secs": str(args.review_window_secs),
     }

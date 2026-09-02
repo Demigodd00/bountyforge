@@ -226,10 +226,13 @@ def _github_json(url: str, label: str):
         raise gl.vm.UserError(f"{ERROR_TRANSIENT} {label} service temporarily unavailable")
     if response.status != 200:
         raise gl.vm.UserError(f"{ERROR_EXTERNAL} {label} could not be fetched")
-    if len(response.body) > MAX_RESPONSE_BYTES:
+    body = response.body
+    if body is None:
+        raise gl.vm.UserError(f"{ERROR_EXTERNAL} {label} response body is unavailable")
+    if len(body) > MAX_RESPONSE_BYTES:
         raise gl.vm.UserError(f"{ERROR_EXPECTED} {label} exceeds supported evidence size")
     try:
-        return json.loads(response.body.decode("utf-8"))
+        return json.loads(body.decode("utf-8"))
     except (ValueError, TypeError, UnicodeError):
         raise gl.vm.UserError(f"{ERROR_EXTERNAL} {label} response is not valid JSON")
 
@@ -1115,6 +1118,7 @@ class BountyForge(gl.Contract):
         queue = self._queue(bounty)
         next_claim = self._get_claim(bounty_id, queue[0]) if queue else None
         review_pending = next_claim is not None and next_claim.status == CLAIM_PENDING
+        review_deadline = int(next_claim.review_deadline_unix) if next_claim is not None and next_claim.status == CLAIM_PENDING else 0
         return {
             "id": bounty.id,
             "sponsor": str(bounty.sponsor),
@@ -1136,7 +1140,7 @@ class BountyForge(gl.Contract):
             "accepted_claim_index": str(int(bounty.accepted_claim_index)) if bounty.has_accepted_claim else "",
             "winning_hunter": str(self._get_claim(bounty_id, int(bounty.accepted_claim_index)).hunter) if bounty.has_accepted_claim else "",
             "next_claim_index": str(queue[0]) if review_pending else "",
-            "review_deadline_unix": str(int(next_claim.review_deadline_unix)) if review_pending else "0",
+            "review_deadline_unix": str(review_deadline),
             "awarded_at_unix": str(int(bounty.awarded_at_unix)),
             "challenge_deadline_unix": str(int(bounty.challenge_deadline_unix)),
             "challenged": bounty.challenged,
@@ -1267,7 +1271,7 @@ class BountyForge(gl.Contract):
     @gl.public.view
     def get_config(self) -> dict:
         return {
-            "version": "3.1.0",
+            "version": "3.1.1",
             "funding_model": "WITHDRAWABLE_DEPOSIT_CREDIT_V1",
             "evidence_schema": "bountyforge-evidence-v3",
             "treasury": str(self.treasury),

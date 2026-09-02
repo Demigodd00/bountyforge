@@ -19,6 +19,8 @@ jobs:
         run: python scripts/prepare_gltest_runner.py
       - name: Lint Intelligent Contract
         run: genvm-lint check contracts/bounty_forge.py
+      - name: Typecheck Intelligent Contract
+        run: genvm-lint typecheck contracts/bounty_forge.py
       - name: Run direct-mode regressions
         run: pytest tests/direct -q
       - name: Test deployment safeguards
@@ -29,7 +31,7 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     env:
-      NEXT_PUBLIC_BOUNTYFORGE_ADDRESS: "0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8"
+      NEXT_PUBLIC_BOUNTYFORGE_ADDRESS: "0xCD7E3bad31F1C26F139907621A569940C2AD70Bd"
       NEXT_PUBLIC_NETWORK_NAME: "StudioNet"
     steps:
       - uses: actions/checkout@v7
@@ -59,7 +61,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      NEXT_PUBLIC_BOUNTYFORGE_ADDRESS: "0x7Be34BCded4e2C57bF14F6f9D474eCDAA35e32c8"
+      NEXT_PUBLIC_BOUNTYFORGE_ADDRESS: "0xCD7E3bad31F1C26F139907621A569940C2AD70Bd"
       NEXT_PUBLIC_NETWORK_NAME: "StudioNet"
     steps:
       - uses: actions/checkout@v7
