@@ -1,7 +1,8 @@
 {
   "app": "BountyForge",
   "version": "3.1.0",
-  "verified_on": "2026-08-29",
+  "frontend_version": "3.2.0",
+  "verified_on": "2026-09-02",
   "release_scope": "StudioNet test release; simulated GEN only",
   "submission_readiness": "ready_for_genlayer_projects_submission",
   "contract_address": "0xf650cB608E02Ec03A0e524078A14C504b56e5c5B",
@@ -36,7 +37,7 @@
     },
     "frontend_tests": {
       "result": "passed",
-      "total": 69
+      "total": 74
     },
     "typescript": "passed",
     "production_build_with_release_address": "passed",
@@ -45,6 +46,17 @@
       "result": "passed",
       "total": 3,
       "duration_seconds": 1128.14
+    },
+    "steward_resubmission_smoke": {
+      "result": "passed",
+      "duration_seconds": 243.45,
+      "temporary_contract": "0xdD2a296fb45872cEdBB2431aC777AdBF41350089",
+      "deposit_transaction": "0x509692c20f5e995acb0b2e478055bfb43caa48254e8225bab6d349f87c122b6e",
+      "create_transaction": "0xe84b8d351f61b79592871c859c89148cda4d87108f24992c65b210e5439014c5",
+      "create_execution": "FINALIZED SUCCESS",
+      "five_argument_create": true,
+      "create_attached_value_atto": "0",
+      "authorization_and_refund_assertions": "passed"
     },
     "deployment_verification": {
       "receipt": "FINALIZED",
@@ -140,10 +152,16 @@
   "frontend_publication": {
     "status": "READY",
     "production_url": "https://bountyforge-web.vercel.app",
-    "deployment_url": "https://bountyforge-ov8kaj3k9-demi17.vercel.app",
-    "deployment_id": "dpl_j9caajgCTKydGcbrYCVtgJobLyKy",
+    "deployment_url": "https://bountyforge-1lmp015hq-demi17.vercel.app",
+    "deployment_id": "dpl_9o5wXqwTwHp4tPBtB2kTRshz6Gxu",
+    "frontend_version": "3.2.0",
     "verified_contract_version": "3.1.0",
     "public_routes_http_status": 200,
+    "dedicated_routes": ["/", "/bounties", "/post", "/dashboard", "/bounties/bf-1", "/admin"],
+    "legacy_bounty_redirect": "passed",
+    "html_cache_control": "no-store",
+    "multi_wallet_eip6963_test": "passed",
+    "nonpayable_value_omission_test": "passed",
     "browser_console_errors_during_final_check": 0,
     "public_form_draft_retention": "passed",
     "public_form_title_limit": 80,
