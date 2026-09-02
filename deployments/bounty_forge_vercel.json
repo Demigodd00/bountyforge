@@ -37,7 +37,7 @@
     "html_cache_control": "no-store on all product routes",
     "dedicated_routes": "/, /bounties, /post, /dashboard, /bounties/[id], /admin",
     "browser_contract_config": "address 0x7Be34...e32c8, version 3.1.0, treasury 0xA1e3...8698, 5-minute windows",
-    "browser_contract_stats": "passed; two canonical smoke bounties are CANCELLED and no claims are recorded",
+    "browser_contract_stats": "passed; 3 created, 1 claim, 1 accepted, 1 settled; bf-3 is SETTLED and claim 0 is PAID",
     "browser_funding_model": "Withdrawable app balance",
     "browser_console_errors": 0,
     "runtime_schema_guard": "all 23 expected public methods verified before any wallet signature",
@@ -57,6 +57,27 @@
       "create_attached_value_atto": "0",
       "cancel_refund": "0x02cbefbce9c97ee86a6cd885458cf86fe9b42406fb2655976e50c200391555d8",
       "final_bounty": "bf-2 CANCELLED"
+    },
+    "canonical_two_wallet_full_lifecycle": {
+      "result": "passed",
+      "bounty": "bf-3 SETTLED",
+      "claim": "claim 0 PAID",
+      "verdict": "FIXES_ISSUE at confidence 100",
+      "issue": "https://github.com/Demigodd00/bountyforge/issues/3",
+      "pull_request": "https://github.com/Demigodd00/bountyforge/pull/4",
+      "deposit_create_claim_resolve_finalize_payout": "all FINALIZED with successful leader execution",
+      "create_attached_value_atto": "0",
+      "hunter_payout_delta_atto": "2000000000000000",
+      "final_contract_balance_atto": "0",
+      "transactions": {
+        "sponsor_deposit": "0xad36cf60766eac72c95884eea0a13b8cee9c60ef02af7ea64abb3a04908325f7",
+        "create_bounty": "0xe21c89080066b655441c2a041677a84b216fdbbb535e0d0a0fc990724c15b0e4",
+        "hunter_deposit": "0x01a7aa553d490b38dbf30af881fc28df3ab348b70de6d7cc386d4245411f48e4",
+        "submit_claim": "0x4103079f6d20b81a548f2f29bc557f1c1f652afe0adfa7ca6993eea1a729b287",
+        "resolve_claim": "0xe882c3d933caf4d9b897ece39bb6085de59accb94145f18a6f28d1bcc52dd9c8",
+        "finalize_bounty": "0x27fe9e8b6a8b06cad9d6e564813e54f5de02d357cb71e685d0f58bda8d4b19d3",
+        "claim_payout": "0x7de9369de7b95e421fcee7ff68ef664332c109636175b84093e2234ac32a698e"
+      }
     },
     "frontend_tests": "77 passed",
     "typescript": "passed",

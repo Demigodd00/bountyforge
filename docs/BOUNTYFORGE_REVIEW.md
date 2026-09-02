@@ -12,6 +12,8 @@ Updated: 2026-09-02. Contract v3.1 retains the verified GenLayer protocol. Front
 | Deposit/create sequence was not proven on the production address | Repeatable frontend-client smoke enforces deposit finality and credit before a zero-value create, then verifies state and refund | Deposit `0x7cad…1072`, create `0xa146…31e9`, cancel `0xf047…3cfa`, all finalized successfully on the canonical address |
 | Client stopped polling while valid transactions were still accepted | Poll every three seconds for up to 120 attempts and retain the public hash throughout confirmation | Live production-adapter test initially reproduced the timeout at `ACCEPTED`, then passed deposit `0xa27f…c04a`, create `0xfc52…779e`, state reads, and refund `0x02cb…55d8` in 130.43 seconds |
 
+The final canonical two-wallet run used public issue #3 and PR #4. `bf-3` completed sponsor deposit and zero-value creation, hunter deposit and claim, immutable evidence capture, GenLayer review, the full challenge window, permissionless finalization, and hunter-only payout. All seven contract transactions finalized with successful leader execution; the verdict was `FIXES_ISSUE` at confidence 100; final states are `SETTLED` and `PAID`; the hunter received exactly 0.002 GEN; the contract balance returned to zero. Full hashes are recorded in `deployments/bounty_forge_acceptance.json` and `docs/BOUNTYFORGE_RESUBMISSION.md`.
+
 ## Historical first steward remediation (v3.2)
 
 | Steward blocker | v3.2 correction | Permanent proof |
@@ -67,7 +69,7 @@ This addresses normal app operations; it does not promise recovery of arbitrary 
 
 ## Remaining acceptance boundary
 
-The hosted two-wallet happy path is complete: sponsor funding and creation, hunter funding and claim submission, immutable public-PR evidence capture, GenLayer review, challenge-window finalization, and winner payout were all verified against finalized StudioNet state. Live appeal and sponsor-challenge outcomes remain optional extended-path evidence; their contract and UI paths have automated regression coverage. Public GitHub evidence is limited to small, complete text diffs; there is no private-repository support, automated review keeper, or guarantee of model correctness.
+The canonical two-wallet happy path is complete on the exact production address: sponsor funding and creation, hunter funding and claim submission, immutable public-PR evidence capture, GenLayer review, challenge-window finalization, and winner payout were all verified against finalized StudioNet state. Live appeal and sponsor-challenge outcomes remain optional extended-path evidence; their contract and UI paths have automated regression coverage. Public GitHub evidence is limited to small, complete text diffs; there is no private-repository support, automated review keeper, or guarantee of model correctness.
 
 ## Historical v2 findings
 

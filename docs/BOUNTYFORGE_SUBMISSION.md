@@ -15,17 +15,19 @@ BountyForge is a GenLayer-native marketplace that turns public GitHub issues int
 
 ## Verified evidence
 
-- Public release commit: `8262a473fe513134f7ce742be4394825d78f5fce`
-- Public CI: `https://github.com/Demigodd00/bountyforge/actions/runs/33267823322` (`passed`)
+- Public implementation commit: `445ba1a5f39ccef74e8e811c26b259c6566b84f7`
+- Public CI: `https://github.com/Demigodd00/bountyforge/actions/runs/33640410778` (`passed`)
 - Contract version: `3.1.0`
 - Funding model: `WITHDRAWABLE_DEPOSIT_CREDIT_V1`
-- Canonical contract smoke bounty: `bf-1`, `CANCELLED` after verified refund
+- Canonical full-lifecycle bounty: `bf-3`, `SETTLED`
+- Canonical full-lifecycle claim: claim 0, `PAID`
+- Canonical verdict: `FIXES_ISSUE`, confidence bucket `100`
 - Historical full lifecycle on the prior v3.1 deployment: `bf-1` `SETTLED`, claim 0 `PAID`
-- Verdict: `FIXES_ISSUE`, confidence bucket `90`
+- Historical prior-deployment verdict: `FIXES_ISSUE`, confidence bucket `90`
 - Reward paid: `0.001 GEN`
 - Stake returned: `0.001 GEN`
 - Final contract balance: `0 GEN`
-- Frontend tests: `74 passed` (including multi-wallet selection, passive reconnect, route isolation, and zero-value omission)
+- Frontend tests: `77 passed` (including ABI matching, raw StudioNet receipts, multi-wallet selection, route isolation, and zero-value omission)
 - Contract direct tests: `65 BountyForge cases passed`
 - StudioNet balance integration tests: `3 passed`
 - Production dependency audit: no known vulnerabilities

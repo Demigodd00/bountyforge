@@ -35,6 +35,20 @@ The script is at `apps/bountyforge-web/scripts/verify-studionet-flow.mjs` and do
 
 The stronger live test at `apps/bountyforge-web/tests/live/studionet-frontend-flow.test.ts` imports the production frontend adapter itself. On the same canonical address it passed deposit `0xa27f4d32be6e5f1642b5dad1b6e59ac7a8a05d3af51156f71f122b13fa02c04a`, zero-value creation `0xfc521440a9486171c36d689b7154ef8b70b69fc80eaefc987218055c8272779e`, finalized-state reads for `bf-2`, and cancellation/refund `0x02cbefbce9c97ee86a6cd885458cf86fe9b42406fb2655976e50c200391555d8`. This test first exposed the premature polling timeout at `ACCEPTED`; after the fix it completed in 130.43 seconds.
 
+## Canonical two-wallet end-to-end proof
+
+On 2 September 2026, isolated sponsor and hunter wallets completed the entire production-contract lifecycle using public [issue #3](https://github.com/Demigodd00/bountyforge/issues/3) and [PR #4](https://github.com/Demigodd00/bountyforge/pull/4):
+
+- Sponsor deposit: `0xad36cf60766eac72c95884eea0a13b8cee9c60ef02af7ea64abb3a04908325f7`
+- Five-argument, zero-value bounty creation: `0xe21c89080066b655441c2a041677a84b216fdbbb535e0d0a0fc990724c15b0e4`
+- Hunter stake deposit: `0x01a7aa553d490b38dbf30af881fc28df3ab348b70de6d7cc386d4245411f48e4`
+- Zero-value claim and immutable evidence capture: `0x4103079f6d20b81a548f2f29bc557f1c1f652afe0adfa7ca6993eea1a729b287`
+- GenLayer adjudication: `0xe882c3d933caf4d9b897ece39bb6085de59accb94145f18a6f28d1bcc52dd9c8`, `FIXES_ISSUE`, confidence 100
+- Finalization after the configured five-minute challenge window: `0x27fe9e8b6a8b06cad9d6e564813e54f5de02d357cb71e685d0f58bda8d4b19d3`
+- Hunter payout: `0x7de9369de7b95e421fcee7ff68ef664332c109636175b84093e2234ac32a698e`
+
+Every contract transaction reached `FINALIZED` with successful leader execution. Bounty `bf-3` ended `SETTLED`, claim 0 ended `PAID`, the hunter balance increased by exactly 0.002 GEN for returned stake plus reward, and the contract balance plus both app credits ended at zero. The temporary public issue and unmerged PR were closed after the contract had captured immutable evidence and payout was verified. Disposable wallet keys remained only in memory and were cleared after the run.
+
 ## Reviewer retest
 
 1. Open `https://bountyforge-web.vercel.app/admin` and confirm the contract address above, version 3.1.0, recoverable deposit-credit funding, and 300-second windows.

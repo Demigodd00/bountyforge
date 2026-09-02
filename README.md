@@ -32,6 +32,8 @@ Frontend release 3.3 pins the app to the canonical StudioNet deployment and veri
 
 The canonical release was exercised with the same `genlayer-js` client used by the web app: deposit `0x7cad6cd1a2920c22e7cf2bb6e5ed9ade9e579ad27ad0ae02c2a9d2d691fd1072`, zero-value creation `0xa146fcb6e2919707d09a6d1d6e8620fd8604aa31b041dd147cc175d2dcd031e9`, and cancellation/refund `0xf047553099eb89e4c0be3abe5df703fa1c51486120887d848ad60d87452e3cfa` all finalized with successful execution.
 
+A separate two-wallet acceptance run completed the full workflow on this exact production contract using public [issue #3](https://github.com/Demigodd00/bountyforge/issues/3) and [PR #4](https://github.com/Demigodd00/bountyforge/pull/4). Bounty `bf-3` progressed through funding, zero-value creation, claim registration, immutable evidence capture, a 100-confidence `FIXES_ISSUE` verdict, the five-minute challenge window, finalization, and hunter payout. Its final state is `SETTLED`; claim 0 is `PAID`; the contract balance returned to zero.
+
 ## Historical hosted lifecycle on the prior v3.1 deployment
 
 On 29 August 2026, separate sponsor and hunter wallets completed the full production-frontend flow on StudioNet:

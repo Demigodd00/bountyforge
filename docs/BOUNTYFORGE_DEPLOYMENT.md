@@ -14,6 +14,7 @@ Verified on 2026-09-02:
 - Deployment transaction: `0xe3f33b86b2d623595af8b1f3ae483048f792571b3aad3ab9ac2540718f664ea1`, finalized successfully.
 - Hosting deployment: `dpl_8ueoREVY3WUTrESn8s4NKRJJMnsw`, READY and aliased to production.
 - Canonical frontend-client smoke: deposit, zero-value five-argument creation, and cancellation/refund all finalized successfully on this exact address.
+- Canonical two-wallet acceptance: `bf-3` is `SETTLED` and claim 0 is `PAID` after public issue/PR evidence, a 100-confidence `FIXES_ISSUE` verdict, challenge-window finalization, and hunter payout. The hunter balance increased by the 0.001 GEN stake plus 0.001 GEN reward; contract balance and both app credits ended at zero.
 - Records: `deployments/bounty_forge_studionet.json`, `deployments/bounty_forge_vercel.json`, and `deployments/bounty_forge_acceptance.json`. Prior records are preserved under `deployments/history/`.
 
 This is a StudioNet development release, not a mainnet deployment. Vercel's production URL describes the hosting environment; it does not change the contract's network.
