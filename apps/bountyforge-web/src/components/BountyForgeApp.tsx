@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   BountyAction, BountySummary, BountyView, ClaimAction, ClaimView, ProtocolConfig,
   ProgressHandler, TxProgress, WalletSession, CONTRACT_READY,
@@ -9,14 +10,16 @@ import {
   getConfig, getPendingTransaction, isBountyId, isCompatibleConfig, listBounties,
   listClaims, listHunterClaims, listSponsorBounties, parseGen, releaseRejectedStake,
   resolveClaim, resumePendingTransaction, sameAddress, shorten, submitClaim,
-  timeoutClaim, validateChallengeInput, validateClaimInput, validateCreateInput, watchWallet,
+  timeoutClaim, validateChallengeInput, validateClaimInput, validateCreateInput, watchWallet, restoreWallet,
 } from "@/lib/contract";
 import BountyControls from "./BountyControls";
 import ClaimRow from "./ClaimRow";
 import { ErrorNotice, Field, Modal, StatusPill, TxNotice, dateLabel } from "./Ui";
 
 type Feed = "all" | "sponsor" | "hunter";
-type FormKind = "create" | "submit" | "challenge" | null;
+export type BountyForgeView = "explore" | "dashboard" | "post" | "bounty";
+type FormKind = "submit" | "challenge" | null;
+type BountyForgeAppProps = { view?: BountyForgeView; bountyId?: string };
 const emptyProgress: TxProgress = { state: "confirmed", label: "" };
 
 function mergeItems<T>(first: T[], previous: T[], key: (item: T) => string): T[] {
@@ -24,14 +27,15 @@ function mergeItems<T>(first: T[], previous: T[], key: (item: T) => string): T[]
   return [...first, ...previous].filter((item) => { const id = key(item); if (seen.has(id)) return false; seen.add(id); return true; });
 }
 
-export default function BountyForgeApp() {
+export default function BountyForgeApp({ view = "explore", bountyId = "" }: BountyForgeAppProps) {
+  const router = useRouter();
   const [session, setSession] = useState<WalletSession | null>(null);
   const [config, setConfig] = useState<ProtocolConfig | null>(null);
   const [credit, setCredit] = useState<bigint | null>(null);
   const [bounties, setBounties] = useState<BountySummary[]>([]);
   const [activity, setActivity] = useState<ClaimView[]>([]);
   const [total, setTotal] = useState(0);
-  const [feed, setFeed] = useState<Feed>("all");
+  const [feed, setFeed] = useState<Feed>(view === "dashboard" ? "sponsor" : "all");
   const [filter, setFilter] = useState("ALL");
   const [selected, setSelected] = useState<BountyView | null>(null);
   const [selectedId, setSelectedId] = useState("");
@@ -153,43 +157,43 @@ export default function BountyForgeApp() {
     } finally { if (request === detailRequest.current) setDetailLoading(false); }
   }, []);
 
-  const selectBounty = useCallback(async (id: string, updateUrl = true) => {
+  const selectBounty = useCallback(async (id: string) => {
     if (!isBountyId(id)) { setError("Use a bounty ID such as bf-1."); return; }
     selectedIdRef.current = id;
     scrollTarget.current = id;
     setSelectedId(id); setSelected(null); setClaims([]); setError("");
-    if (updateUrl) {
-      const url = new URL(window.location.href);
-      url.searchParams.set("bounty", id); url.hash = "bounty-detail";
-      window.history.pushState(null, "", url);
-    }
     try {
       await loadDetails(id);
     } catch (err) { if (selectedIdRef.current === id) setError(friendlyError(err)); }
   }, [loadDetails]);
 
   useEffect(() => {
-    if (CONTRACT_READY) void getConfig().then(setConfig).catch((err) => setError(friendlyError(err)));
+    let active = true;
+    if (CONTRACT_READY) {
+      void getConfig().then((value) => { if (active) setConfig(value); }).catch((err) => { if (active) setError(friendlyError(err)); });
+      void restoreWallet().then((wallet) => {
+        if (active && wallet && !currentWalletAddress.current) setSession(wallet);
+      }).catch(() => { /* Connection remains an explicit user action. */ });
+    }
     const pending = getPendingTransaction();
     if (pending) {
       setProgress({ state: "unconfirmed", label: "Checking your previous transaction…", hash: pending.hash });
       void checkPending();
     }
-    const fromUrl = () => {
-      const id = new URLSearchParams(window.location.search).get("bounty");
-      if (id) { setOpenId(id); void selectBounty(id, false); }
-      else { ++detailRequest.current; selectedIdRef.current = ""; setSelectedId(""); setSelected(null); setClaims([]); }
-    };
-    fromUrl();
-    window.addEventListener("popstate", fromUrl);
-    return () => window.removeEventListener("popstate", fromUrl);
-  }, [selectBounty]);
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
+    if (view === "bounty" && bountyId) { setOpenId(bountyId); void selectBounty(bountyId); return; }
+    ++detailRequest.current; selectedIdRef.current = ""; setSelectedId(""); setSelected(null); setClaims([]);
+  }, [view, bountyId, selectBounty]);
+
+  useEffect(() => {
+    if (view !== "explore" && view !== "dashboard") return;
     setBounties([]); setActivity([]); setTotal(0);
     void loadFeed().catch(reportReadError);
     return () => { ++feedRequest.current; };
-  }, [loadFeed, reportReadError]);
+  }, [view, loadFeed, reportReadError]);
 
   useEffect(() => {
     if (!selected || scrollTarget.current !== selected.id) return;
@@ -230,7 +234,7 @@ export default function BountyForgeApp() {
     if (functionName && ["deposit", "deposit_credit_recovered", "withdraw_credit", "create_bounty", "submit_claim", "challenge_claim"].includes(functionName)) setCredit(null);
     if (functionName === "deposit") setProgress((current) => ({ ...current, state: "confirmed", label: "Deposit confirmed. Complete Step 2 below." }));
     if (functionName === "deposit_credit_recovered") setProgress((current) => ({ ...current, state: "confirmed", label: "App balance found. Continue to Step 2." }));
-    if (functionName === "create_bounty") { setModal(null); setTitle(""); setCriteria(""); setIssueUrl(""); setFeed("sponsor"); setFilter("ALL"); }
+    if (functionName === "create_bounty") { setTitle(""); setCriteria(""); setIssueUrl(""); }
     if (functionName === "submit_claim") { setModal(null); setPrUrl(""); setHeadSha(""); setGithubLogin(""); }
     if (functionName === "challenge_claim") { setModal(null); setChallengeStatement(""); }
   }
@@ -240,7 +244,7 @@ export default function BountyForgeApp() {
       await refresh();
       if (functionName === "create_bounty" && session) {
         const mine = await listSponsorBounties(session.address);
-        if (mine.items[0]) await selectBounty(mine.items[0].id);
+        if (mine.items[0]) router.push("/bounties/" + mine.items[0].id);
       }
     } catch (err) { setError("Confirmed, but refresh failed. " + friendlyError(err)); }
   }
@@ -334,7 +338,7 @@ export default function BountyForgeApp() {
       <span>App balance: <b>{credit === null ? "Loading…" : formatGen(credit) + " GEN"}</b></span>
       {shortfall > 0n
         ? <><button type="button" className="button ghost small" disabled={locked} onClick={() => void run((wallet, notify) => depositCredit(wallet, shortfall, notify), "deposit")}>1 · Deposit {formatGen(shortfall)} GEN</button><small>Then complete Step 2.</small></>
-        : credit !== null && amount > 0n ? <small>Balance ready for Step 2.</small> : null}
+        : credit !== null && amount > 0n ? <small>Balance ready. Step 2 attaches 0 GEN and spends this existing app balance.</small> : null}
     </div>;
   }
 
@@ -354,76 +358,86 @@ export default function BountyForgeApp() {
   const visible = useMemo(() => filter === "ALL" ? bounties : bounties.filter((bounty) => bounty.status === filter), [bounties, filter]);
   const ownActiveClaim = claims.some((claim) => sameAddress(claim.hunter, session?.address) && !claim.stake_released);
   const canSubmit = selected?.accepting_claims && !ownActiveClaim;
-  const postLabel = !ready ? "Checking StudioNet…" : locked ? lockedLabel : "Post a bounty";
   const walletButton = <button className="wallet-button" disabled={busy || connecting} onClick={() => session ? setSession(null) : void connect()} aria-label={session ? "Disconnect wallet" : "Connect wallet"}>
     {session ? <><span className="wallet-dot" />{shorten(session.address)}</> : connecting ? "Connecting…" : "Connect wallet"}
   </button>;
-  const postButton = <button className="button primary small" disabled={!ready || locked} onClick={() => { setError(""); setModal("create"); }}>+ {postLabel}</button>;
+  const postButton = <a className="button primary small" href="/post">+ Post a bounty</a>;
 
   return <main>
     <nav className="nav shell">
       <a href="/" className="brand"><span className="brand-mark">BF</span><span>Bounty<span className="accent">Forge</span></span></a>
-      <div className="nav-links"><a href="#explore">Explore</a><a href="#how">How it works</a><a href="/admin">Protocol</a></div>
+      <div className="nav-links">
+        <a className={view === "explore" || view === "bounty" ? "active" : ""} href="/bounties">Explore</a>
+        <a className={view === "post" ? "active" : ""} href="/post">Post</a>
+        <a className={view === "dashboard" ? "active" : ""} href="/dashboard">Dashboard</a>
+        <a href="/admin">Protocol</a>
+      </div>
       {walletButton}
     </nav>
-
-    <section className="hero shell" id="top">
-      <div className="hero-copy">
-        <p className="eyebrow"><span className="pulse" />GITHUB BOUNTIES ON GENLAYER</p>
-        <h1>Ship code.<br /><em>Earn trust.</em></h1>
-        <p className="lede">Fund GitHub issues. Ship fixes. Earn GEN.</p>
-        <div className="hero-actions"><a className="button primary" href="#explore">Find a bounty <span>↘</span></a><button className="button ghost" disabled={!ready || locked} onClick={() => { setError(""); setModal("create"); }}>{postLabel} <span>＋</span></button></div>
-        <div className="hero-trust"><span>Public repos</span><span>·</span><span>Onchain escrow</span><span>·</span><span>Non-custodial</span></div>
-      </div>
-      <div className="hero-card"><div className="orbit orbit-one" /><div className="orbit orbit-two" />
-        <div className="hero-card-inner">
-          <div className="card-top"><span>TEST RELEASE</span><span className="live"><span className="pulse" />STUDIONET</span></div>
-          <div className="signal"><div className="signal-ring">✦</div><div><strong>Work with proof.</strong><p>PR. Commit. Wallet.</p></div></div>
-          <div className="mini-stats"><div><b>{config?.max_claims_per_bounty ?? "—"}</b><span>claim slots</span></div><div><b>{stakeLabel}</b><span>GEN stake</span></div><div><b>{appealLabel}</b><span>appeal window</span></div></div>
-        </div>
-      </div>
-    </section>
 
     {!ready && <div className="release-note shell" role="status">{!CONTRACT_READY ? "Contract not configured." : config ? "Contract upgrade pending. Transactions are paused." : "Checking contract…"} <a href="/admin">Protocol status ↗</a></div>}
     {!modal && <div className="shell"><ErrorNotice message={error} onDismiss={() => setError("")} /><TxNotice progress={progress} busy={busy} onCheck={() => void checkPending()} onClear={clearSavedPending} /></div>}
 
     {session && ready && <div className="wallet-balance shell"><span>App balance <b>{credit === null ? "Loading…" : formatGen(credit) + " GEN"}</b></span><button className="text-button" disabled={locked || credit === null || credit === 0n} onClick={() => void run(withdrawCredit, "withdraw_credit")}>Withdraw unused GEN</button></div>}
-    <section className="workspace shell" id="explore">
-      <div className="section-heading"><div><p className="eyebrow">MARKETPLACE</p><h2>Find your next fix.</h2></div>{postButton}</div>
-      <div className="feed-tabs" role="group" aria-label="Bounty views">
-        {([["all", "All bounties"], ["sponsor", "My bounties"], ["hunter", "My claims"]] as const).map(([value, label]) => <button key={value} className={feed === value ? "active" : ""} aria-pressed={feed === value} onClick={() => { setFeed(value); setFilter("ALL"); }}>{label}</button>)}
+    {view === "post" && <section className="form-page shell">
+      <div className="page-intro"><p className="eyebrow">CREATE BOUNTY</p><h1>Post a bounty.</h1><p className="lede">Fund one public GitHub issue and define exactly what a successful fix must do.</p></div>
+      <div className="form-layout">
+        <form className="form-card" aria-label="Post a bounty" onSubmit={onCreate}><fieldset disabled={locked}>
+          <Field label="Bounty title"><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Fix dark mode" required minLength={limit("min_title_chars", 3)} maxLength={limit("max_title_chars", 80)} /></Field>
+          <Field label="GitHub issue URL"><input value={issueUrl} onChange={(event) => setIssueUrl(event.target.value)} placeholder="https://github.com/org/repo/issues/42" required type="url" maxLength={limit("max_url_chars", 200)} /><small className="hint">Public repositories only.</small></Field>
+          <Field label="Acceptance criteria"><textarea value={criteria} onChange={(event) => setCriteria(event.target.value)} placeholder="What must the fix do?" required minLength={limit("min_criteria_chars", 20)} maxLength={limit("max_criteria_chars", 600)} /></Field>
+          <div className="form-row"><Field label="Reward (GEN)"><input value={pot} onChange={(event) => setPot(event.target.value)} inputMode="decimal" required /><small className="hint">{config ? formatGen(config.min_pot_atto) + "–" + formatGen(config.max_pot_atto) + " GEN" : ""}</small></Field><Field label="Deadline (days)"><input value={deadline} onChange={(event) => setDeadline(event.target.value)} type="number" min={1} max={Math.floor(limit("max_deadline_secs", 31536000) / 86400)} step={1} required /></Field></div>
+          <p className="form-note">Funds enter contract escrow. You can cancel only before the first claim.</p>
+          {!session && <div className="connect-callout"><div><b>Connect MetaMask to fund this bounty</b><p>Use Connect wallet above. MetaMask is selected safely when other wallets are enabled.</p></div></div>}
+          {fundingStep(creationCost)}
+          <button className="button primary full" type="submit" disabled={writesDisabled || !hasCredit(creationCost)}>{stepTwoLabel("2 · Create bounty with 0 GEN attached", creationCost)} <span>→</span></button>
+        </fieldset></form>
+        <aside className="transaction-plan">
+          <p className="eyebrow">SAFE FUNDING</p>
+          <ol><li><b>Deposit reward</b><span>GEN becomes your recoverable BountyForge balance.</span></li><li><b>Create bounty</b><span>The non-payable call attaches 0 GEN and spends that balance.</span></li></ol>
+          <p>Unused balance can be withdrawn from this page.</p>
+        </aside>
       </div>
+    </section>}
+
+    {(view === "explore" || view === "dashboard") && <section className="workspace shell">
+      <div className="section-heading"><div><p className="eyebrow">{view === "dashboard" ? "YOUR WORK" : "MARKETPLACE"}</p><h1 className="page-title">{view === "dashboard" ? "Your activity." : "Find your next fix."}</h1></div>{postButton}</div>
+      {view === "dashboard" && <div className="feed-tabs" role="group" aria-label="Dashboard views">
+        {([["sponsor", "My bounties"], ["hunter", "My claims"]] as const).map(([value, label]) => <button key={value} className={feed === value ? "active" : ""} aria-pressed={feed === value} onClick={() => { setFeed(value); setFilter("ALL"); }}>{label}</button>)}
+      </div>}
       <div className="toolbar">
         <div className="filters">{feed !== "hunter" && ["ALL", "OPEN", "AWARDED", "FINALIZED", "SETTLED"].map((value) => <button key={value} className={filter === value ? "active" : ""} aria-pressed={filter === value} onClick={() => setFilter(value)}>{value === "ALL" ? "Any status" : value.toLowerCase()}</button>)}</div>
         <span className="muted">{loading ? "Loading…" : loadedCount.current + " of " + total + " loaded"}</span>
         <button className="icon-button" aria-label="Refresh bounties" disabled={loading || busy || !CONTRACT_READY} onClick={() => { setError(""); void refresh().catch((err) => setError(friendlyError(err))); }}>↻</button>
       </div>
-      <form className="bounty-lookup" onSubmit={(event) => { event.preventDefault(); void selectBounty(openId.trim()); }}>
+      <form className="bounty-lookup" onSubmit={(event) => {
+        event.preventDefault();
+        const id = openId.trim();
+        if (!isBountyId(id)) { setError("Use a bounty ID such as bf-1."); return; }
+        router.push("/bounties/" + id);
+      }}>
         <label htmlFor="bounty-id">Open bounty</label><input id="bounty-id" value={openId} onChange={(event) => setOpenId(event.target.value)} placeholder="bf-123" maxLength={23} /><button className="button ghost small" disabled={!CONTRACT_READY}>Open</button>
       </form>
       <div className="bounty-grid">
-        {feed !== "all" && !session ? <Empty title="Connect your wallet" text="Your bounties and claims appear here." />
+        {view === "dashboard" && !session ? <Empty title="Connect your wallet" text="Your bounties and claims appear here." />
           : loading && !loadedCount.current ? <Empty title="Loading bounties…" />
-          : feed === "hunter" ? activity.length ? activity.map((claim) => <button className="bounty-card" key={claim.bounty_id + ":" + claim.index} onClick={() => void selectBounty(claim.bounty_id)}>
+          : feed === "hunter" ? activity.length ? activity.map((claim) => <a className="bounty-card" key={claim.bounty_id + ":" + claim.index} href={"/bounties/" + claim.bounty_id}>
               <div className="card-line"><StatusPill status={claim.status} /><span>{claim.bounty_id}</span></div><h3>{claim.bounty_title}</h3><p>PR #{claim.pr_number} · {claim.github_login}</p><div className="card-bottom"><span>View claim</span><span>→</span></div>
-            </button>) : <Empty title="No claims yet" text="Find a bounty to get started." />
+            </a>) : <Empty title="No claims yet" text="Find a bounty to get started." />
           : !visible.length ? <Empty title={!CONTRACT_READY ? "Bounties unavailable" : filter !== "ALL" ? "No matches in loaded bounties" : feed === "sponsor" ? "No bounties posted yet" : "No bounties yet"} text={filter === "ALL" ? "Post the first one." : undefined} />
-          : visible.map((bounty) => <button className={"bounty-card " + (selectedId === bounty.id ? "selected" : "")} key={bounty.id} onClick={() => void selectBounty(bounty.id)}>
+          : visible.map((bounty) => <a className="bounty-card" key={bounty.id} href={"/bounties/" + bounty.id}>
               <div className="card-line"><StatusPill status={bounty.status} /><span>{bounty.id}</span></div>
               <h3>{bounty.title}</h3><p>{bounty.acceptance_criteria ?? bounty.owner_repo + " · #" + bounty.issue_number}</p>
               <div className="card-bottom"><span className="reward"><b>{formatGen(bounty.pot_atto)}</b> GEN <small>reward</small></span><span className="deadline">Due {dateLabel(bounty.deadline_unix)} <span>→</span></span></div>
-            </button>)}
+            </a>)}
       </div>
       {loadedCount.current < total && <button className="button ghost load-more" disabled={loading} onClick={() => void loadFeed(false).catch((err) => setError(friendlyError(err)))}>{loading ? "Loading…" : feed === "hunter" ? "Load more claims" : "Load more bounties"}</button>}
-    </section>
+    </section>}
 
-    {detailLoading && !selected && <div className="shell progress" role="status">Loading bounty…</div>}
-    {selected && <section className="detail shell" id="bounty-detail" aria-label="Bounty details">
+    {view === "bounty" && detailLoading && !selected && <div className="shell progress" role="status">Loading bounty…</div>}
+    {view === "bounty" && selected && <section className="detail shell" id="bounty-detail" aria-label="Bounty details">
       <div className="detail-main">
-        <div className="detail-kicker"><button className="back" onClick={() => {
-          ++detailRequest.current; selectedIdRef.current = ""; setSelectedId(""); setSelected(null); setClaims([]);
-          const url = new URL(window.location.href); url.searchParams.delete("bounty"); url.hash = "explore"; window.history.pushState(null, "", url);
-        }}>← All bounties</button><a className="muted" href={"?bounty=" + selected.id + "#bounty-detail"}>{selected.id} ↗</a><StatusPill status={selected.status} /></div>
+        <div className="detail-kicker"><a className="back" href="/bounties">← All bounties</a><span className="muted">{selected.id}</span><StatusPill status={selected.status} /></div>
         <h2>{selected.title}</h2><p className="detail-repo"><a href={selected.issue_url} target="_blank" rel="noreferrer">github.com/{selected.owner_repo} #{selected.issue_number} ↗</a></p>
         <div className="criteria"><p className="eyebrow">ACCEPTANCE CRITERIA</p><p>{selected.acceptance_criteria}</p></div>
         <div className="claims-heading"><h3>Claims <span>{claimTotal}</span></h3>{canSubmit && <button className="button primary small" disabled={!ready || locked} onClick={() => { setError(""); setModal("submit"); }}>Submit a claim</button>}</div>
@@ -444,24 +458,9 @@ export default function BountyForgeApp() {
       </aside>
     </section>}
 
-    <section className="how shell" id="how"><div><p className="eyebrow">HOW IT WORKS</p><h2>Fund. Fix. Earn.</h2></div><div className="steps">
-      <Step number="01" title="Fund" text="Post an issue and fund the reward." />
-      <Step number="02" title="Submit" text={"Link your PR and stake " + stakeLabel + " GEN."} />
-      <Step number="03" title="Earn" text="GenLayer reviews the fix. Winners claim the reward." />
-    </div></section>
-
-    {modal && <Modal title={modal === "create" ? "Post a bounty" : modal === "submit" ? "Submit your claim" : "Challenge the award"} busy={busy} onClose={() => setModal(null)}>
+    {modal && <Modal title={modal === "submit" ? "Submit your claim" : "Challenge the award"} busy={busy} onClose={() => setModal(null)}>
       <ErrorNotice message={error} /><TxNotice progress={progress} busy={busy} onCheck={() => void checkPending()} onClear={clearSavedPending} />
       {!session && <div className="modal-wallet">{walletButton}</div>}
-      {modal === "create" && <form onSubmit={onCreate}><fieldset disabled={locked}>
-        <Field label="Bounty title"><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Fix dark mode" required minLength={limit("min_title_chars", 3)} maxLength={limit("max_title_chars", 80)} /></Field>
-        <Field label="GitHub issue URL"><input value={issueUrl} onChange={(event) => setIssueUrl(event.target.value)} placeholder="https://github.com/org/repo/issues/42" required type="url" maxLength={limit("max_url_chars", 200)} /><small className="hint">Public repositories only.</small></Field>
-        <Field label="Acceptance criteria"><textarea value={criteria} onChange={(event) => setCriteria(event.target.value)} placeholder="What must the fix do?" required minLength={limit("min_criteria_chars", 20)} maxLength={limit("max_criteria_chars", 600)} /></Field>
-        <div className="form-row"><Field label="Reward (GEN)"><input value={pot} onChange={(event) => setPot(event.target.value)} inputMode="decimal" required /><small className="hint">{config ? formatGen(config.min_pot_atto) + "–" + formatGen(config.max_pot_atto) + " GEN" : ""}</small></Field><Field label="Deadline (days)"><input value={deadline} onChange={(event) => setDeadline(event.target.value)} type="number" min={1} max={Math.floor(limit("max_deadline_secs", 31536000) / 86400)} step={1} required /></Field></div>
-        <p className="form-note">Funds enter escrow. You can cancel only before the first claim.</p>
-        {fundingStep(creationCost)}
-        <button className="button primary full" type="submit" disabled={writesDisabled || !hasCredit(creationCost)}>{stepTwoLabel("2 · Post bounty", creationCost)} <span>→</span></button>
-      </fieldset></form>}
       {modal === "submit" && selected && <form onSubmit={onSubmit}><fieldset disabled={locked}>
         <div className="callout"><b>PR wallet marker</b><p>Add this line to your PR description:</p><code>BountyForge-Wallet: {session?.address ?? "your wallet address"}</code></div>
         <Field label="Pull request URL"><input value={prUrl} onChange={(event) => setPrUrl(event.target.value)} placeholder="https://github.com/org/repo/pull/123" type="url" maxLength={limit("max_url_chars", 200)} required /><small className="hint">Repository: {selected.owner_repo}.</small></Field>
@@ -480,13 +479,10 @@ export default function BountyForgeApp() {
       </fieldset></form>}
     </Modal>}
 
-    <footer className="footer shell"><div className="brand"><span className="brand-mark">BF</span><span>Bounty<span className="accent">Forge</span></span></div><span>GitHub work. Onchain rewards.</span><a href="/admin">Protocol status ↗</a></footer>
+    <footer className="footer shell"><div className="brand"><span className="brand-mark">BF</span><span>Bounty<span className="accent">Forge</span></span></div><span>StudioNet release 3.2 · GitHub work. Onchain rewards.</span><a href="/admin">Protocol status ↗</a></footer>
   </main>;
 }
 
-function Step({ number, title, text }: { number: string; title: string; text: string }) {
-  return <div className="step"><span>{number}</span><div><h3>{title}</h3><p>{text}</p></div></div>;
-}
 function Empty({ title, text }: { title: string; text?: string }) {
   return <div className="empty-state"><div className="empty-icon">✦</div><h3>{title}</h3>{text && <p>{text}</p>}</div>;
 }

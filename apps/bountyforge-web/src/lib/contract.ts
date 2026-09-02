@@ -17,9 +17,29 @@ export interface EthereumProvider {
   request(args: { method: string; params?: unknown[] | Record<string, unknown> }): Promise<unknown>;
   on?(event: string, listener: WalletListener): void;
   removeListener?(event: string, listener: WalletListener): void;
+  providers?: EthereumProvider[];
+  isMetaMask?: boolean;
+  isBraveWallet?: boolean;
 }
 
-declare global { interface Window { ethereum?: EthereumProvider; } }
+export type WalletProviderOption = {
+  id: string;
+  name: string;
+  rdns: string;
+  provider: EthereumProvider;
+};
+
+type Eip6963ProviderDetail = {
+  info: { uuid: string; name: string; rdns: string; icon?: string };
+  provider: EthereumProvider;
+};
+
+declare global {
+  interface Window { ethereum?: EthereumProvider; }
+  interface WindowEventMap {
+    "eip6963:announceProvider": CustomEvent<Eip6963ProviderDetail>;
+  }
+}
 
 export interface WalletSession { address: Address; client: ReturnType<typeof createClient>; provider: EthereumProvider; }
 export type PendingEffect = { kind: string; values: Record<string, string> };
@@ -42,6 +62,7 @@ const WRITE_CONFIRMATION_TIMEOUT_MS = 60_000;
 let memoryPending: PendingTransaction | null = null;
 let storageUsable = true;
 let writeInFlight = false;
+const WALLET_DISCOVERY_MS = 75;
 
 function contractAddress(): Address {
   if (!CONTRACT_READY) throw new Error("BountyForge contract not configured.");
@@ -121,17 +142,80 @@ async function assertWallet(session: WalletSession): Promise<void> {
   if (!onStudioNet(chainId)) throw new Error("Switch to StudioNet and reconnect.");
 }
 
+function isEthereumProvider(value: unknown): value is EthereumProvider {
+  return Boolean(value && typeof value === "object" && typeof (value as EthereumProvider).request === "function");
+}
+
+function isMetaMask(option: WalletProviderOption): boolean {
+  return option.rdns.toLowerCase() === "io.metamask"
+    || option.name.toLowerCase() === "metamask"
+    || Boolean(option.provider.isMetaMask && !option.provider.isBraveWallet);
+}
+
+export async function discoverWalletProviders(waitMs = WALLET_DISCOVERY_MS): Promise<WalletProviderOption[]> {
+  if (typeof window === "undefined") return [];
+  const found: WalletProviderOption[] = [];
+  const seen = new Set<EthereumProvider>();
+  const add = (option: WalletProviderOption) => {
+    if (!seen.has(option.provider)) { seen.add(option.provider); found.push(option); }
+  };
+  const announce = (event: Event) => {
+    const detail = (event as CustomEvent<unknown>).detail as Partial<Eip6963ProviderDetail> | undefined;
+    const info = detail?.info;
+    if (!info || !isEthereumProvider(detail?.provider)
+      || typeof info.uuid !== "string" || typeof info.name !== "string" || typeof info.rdns !== "string") return;
+    add({ id: info.uuid, name: info.name, rdns: info.rdns, provider: detail.provider });
+  };
+  window.addEventListener("eip6963:announceProvider", announce as EventListener);
+  window.dispatchEvent(new Event("eip6963:requestProvider"));
+  await new Promise<void>((resolve) => window.setTimeout(resolve, Math.max(0, waitMs)));
+  window.removeEventListener("eip6963:announceProvider", announce as EventListener);
+
+  const injected = window.ethereum;
+  const legacy = injected?.providers?.filter(isEthereumProvider) ?? (isEthereumProvider(injected) ? [injected] : []);
+  legacy.forEach((provider, index) => add({
+    id: `legacy-${index}`,
+    name: provider.isMetaMask && !provider.isBraveWallet ? "MetaMask" : legacy.length === 1 ? "Browser wallet" : `Browser wallet ${index + 1}`,
+    rdns: provider.isMetaMask && !provider.isBraveWallet ? "io.metamask" : `legacy.${index}`,
+    provider,
+  }));
+  return found.sort((left, right) => Number(isMetaMask(right)) - Number(isMetaMask(left)));
+}
+
 export async function connectWallet(): Promise<WalletSession> {
-  const provider = window.ethereum;
-  if (!provider) throw new Error("Install MetaMask to connect.");
+  const options = await discoverWalletProviders();
+  const selected = options.find(isMetaMask) ?? (options.length === 1 ? options[0] : undefined);
+  if (!selected) {
+    if (options.length > 1) throw new Error("Multiple wallets detected, but MetaMask was not announced. Choose or enable MetaMask and try again.");
+    throw new Error("Install or enable MetaMask to connect.");
+  }
+  const provider = selected.provider;
   const accounts = await provider.request({ method: "eth_requestAccounts" });
   const address = Array.isArray(accounts) ? accounts[0] : undefined;
   if (typeof address !== "string" || !isAddress(address)) throw new Error("The wallet returned an invalid account.");
-  const client = createClient({ chain: chains.studionet, account: address, provider: provider as never });
+  return buildWalletSession(provider, address);
+}
+
+async function buildWalletSession(provider: EthereumProvider, address: string): Promise<WalletSession> {
+  const walletAddress = address as Address;
+  const client = createClient({ chain: chains.studionet, account: walletAddress, provider: provider as never });
   await client.connect("studionet");
-  const session = { address, client, provider };
+  const session = { address: walletAddress, client, provider };
   await assertWallet(session);
   return session;
+}
+
+export async function restoreWallet(): Promise<WalletSession | null> {
+  const options = await discoverWalletProviders();
+  const selected = options.find(isMetaMask) ?? (options.length === 1 ? options[0] : undefined);
+  if (!selected) return null;
+  const [accounts, chainId] = await Promise.all([
+    selected.provider.request({ method: "eth_accounts" }),
+    selected.provider.request({ method: "eth_chainId" }),
+  ]);
+  const address = Array.isArray(accounts) ? accounts[0] : undefined;
+  if (typeof address !== "string" || !isAddress(address) || !onStudioNet(chainId)) return null;
+  return buildWalletSession(selected.provider, address);
 }
 
 export function watchWallet(session: WalletSession, invalidate: (reason: string) => void): () => void {
@@ -350,7 +434,7 @@ export async function resumePendingTransaction(onProgress: ProgressHandler): Pro
   }
 }
 
-async function write(session: WalletSession, functionName: string, args: unknown[], value: bigint, onProgress: ProgressHandler, validate?: (config: ProtocolConfig) => void, spend: bigint | "stake" = 0n): Promise<string> {
+async function write(session: WalletSession, functionName: string, args: unknown[], value: bigint | undefined, onProgress: ProgressHandler, validate?: (config: ProtocolConfig) => void, spend: bigint | "stake" = 0n): Promise<string> {
   if (writeInFlight) throw new Error("A transaction is already in progress.");
   const previous = getPendingTransaction();
   if (previous) {
@@ -366,10 +450,15 @@ async function write(session: WalletSession, functionName: string, args: unknown
     validate?.(config);
     const requiredCredit = spend === "stake" ? BigInt(config.claim_stake_atto) : spend;
     if (requiredCredit > 0n && await getCredit(session.address) < requiredCredit) throw new Error("Add GEN to your app balance first. Unused balance is withdrawable.");
-    const effect = await preparePendingEffect(session.address, functionName, args, value);
+    if (value !== undefined && value > 0n && functionName !== "deposit") throw new Error("GEN can only be attached to the deposit method.");
+    const effect = await preparePendingEffect(session.address, functionName, args, value ?? 0n);
     await assertWallet(session);
     onProgress({ state: "awaiting-signature", label: "Confirm in your wallet" });
-    const hash = await session.client.writeContract({ address: contractAddress(), functionName, args: args as never[], value });
+    const request = {
+      address: contractAddress(), functionName, args: args as never[],
+      ...(value === undefined ? {} : { value }),
+    } as Parameters<WalletSession["client"]["writeContract"]>[0];
+    const hash = await session.client.writeContract(request);
     pending = { hash: String(hash), functionName, account: session.address, createdAt: Date.now(), effect };
     savePending(pending);
     onProgress({ state: "submitted", label: "Transaction submitted", hash: pending.hash });
@@ -389,15 +478,15 @@ async function write(session: WalletSession, functionName: string, args: unknown
 export const depositCredit = (s: WalletSession, amount: bigint, p: ProgressHandler) => write(s, "deposit", [], amount, p, (config) => {
   if (amount <= 0n || amount > BigInt(config.max_pot_atto)) throw new Error("Choose an amount up to " + formatGen(config.max_pot_atto) + " GEN.");
 });
-export const withdrawCredit = (s: WalletSession, p: ProgressHandler) => write(s, "withdraw_credit", [], 0n, p);
-export const createBounty = (s: WalletSession, input: CreateInput, p: ProgressHandler) => write(s, "create_bounty", [input.title.trim(), input.criteria.trim(), input.issueUrl.trim(), input.deadlineUnix, input.potAtto], 0n, p, (config) => validateCreateInput(input, config), input.potAtto);
-export const submitClaim = (s: WalletSession, bounty: BountyView, prUrl: string, sha: string, login: string, p: ProgressHandler) => write(s, "submit_claim", [bounty.id, prUrl.trim(), sha.trim().toLowerCase(), login.trim()], 0n, p, () => validateClaimInput(bounty.owner_repo, prUrl, sha, login), "stake");
-export const resolveClaim = (s: WalletSession, id: string, index: string, p: ProgressHandler) => write(s, "resolve_claim", [id, claimIndex(index)], 0n, p);
-export const appealClaim = (s: WalletSession, id: string, index: string, p: ProgressHandler) => write(s, "appeal_claim", [id, claimIndex(index)], 0n, p);
-export const releaseRejectedStake = (s: WalletSession, id: string, index: string, p: ProgressHandler) => write(s, "release_rejected_stake", [id, claimIndex(index)], 0n, p);
-export const timeoutClaim = (s: WalletSession, id: string, index: string, p: ProgressHandler) => write(s, "timeout_claim", [id, claimIndex(index)], 0n, p);
-export const challengeClaim = (s: WalletSession, id: string, statement: string, p: ProgressHandler) => write(s, "challenge_claim", [id, statement.trim()], 0n, p, (config) => validateChallengeInput(statement, config), "stake");
-export const finalizeBounty = (s: WalletSession, id: string, p: ProgressHandler) => write(s, "finalize_bounty", [id], 0n, p);
-export const claimPayout = (s: WalletSession, id: string, p: ProgressHandler) => write(s, "claim_payout", [id], 0n, p);
-export const cancelBounty = (s: WalletSession, id: string, p: ProgressHandler) => write(s, "cancel_bounty", [id], 0n, p);
-export const expireBounty = (s: WalletSession, id: string, p: ProgressHandler) => write(s, "expire_bounty", [id], 0n, p);
+export const withdrawCredit = (s: WalletSession, p: ProgressHandler) => write(s, "withdraw_credit", [], undefined, p);
+export const createBounty = (s: WalletSession, input: CreateInput, p: ProgressHandler) => write(s, "create_bounty", [input.title.trim(), input.criteria.trim(), input.issueUrl.trim(), input.deadlineUnix, input.potAtto], undefined, p, (config) => validateCreateInput(input, config), input.potAtto);
+export const submitClaim = (s: WalletSession, bounty: BountyView, prUrl: string, sha: string, login: string, p: ProgressHandler) => write(s, "submit_claim", [bounty.id, prUrl.trim(), sha.trim().toLowerCase(), login.trim()], undefined, p, () => validateClaimInput(bounty.owner_repo, prUrl, sha, login), "stake");
+export const resolveClaim = (s: WalletSession, id: string, index: string, p: ProgressHandler) => write(s, "resolve_claim", [id, claimIndex(index)], undefined, p);
+export const appealClaim = (s: WalletSession, id: string, index: string, p: ProgressHandler) => write(s, "appeal_claim", [id, claimIndex(index)], undefined, p);
+export const releaseRejectedStake = (s: WalletSession, id: string, index: string, p: ProgressHandler) => write(s, "release_rejected_stake", [id, claimIndex(index)], undefined, p);
+export const timeoutClaim = (s: WalletSession, id: string, index: string, p: ProgressHandler) => write(s, "timeout_claim", [id, claimIndex(index)], undefined, p);
+export const challengeClaim = (s: WalletSession, id: string, statement: string, p: ProgressHandler) => write(s, "challenge_claim", [id, statement.trim()], undefined, p, (config) => validateChallengeInput(statement, config), "stake");
+export const finalizeBounty = (s: WalletSession, id: string, p: ProgressHandler) => write(s, "finalize_bounty", [id], undefined, p);
+export const claimPayout = (s: WalletSession, id: string, p: ProgressHandler) => write(s, "claim_payout", [id], undefined, p);
+export const cancelBounty = (s: WalletSession, id: string, p: ProgressHandler) => write(s, "cancel_bounty", [id], undefined, p);
+export const expireBounty = (s: WalletSession, id: string, p: ProgressHandler) => write(s, "expire_bounty", [id], undefined, p);

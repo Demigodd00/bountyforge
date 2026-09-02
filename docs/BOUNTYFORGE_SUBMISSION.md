@@ -25,9 +25,15 @@ BountyForge is a GenLayer-native marketplace that turns public GitHub issues int
 - Reward paid: `0.001 GEN`
 - Stake returned: `0.001 GEN`
 - Final contract balance: `0 GEN`
-- Frontend tests: `69 passed`
+- Frontend tests: `74 passed` (including multi-wallet selection, passive reconnect, route isolation, and zero-value omission)
 - Contract direct tests: `65 BountyForge cases passed`
 - StudioNet balance integration tests: `3 passed`
 - Production dependency audit: no known vulnerabilities
 
 Detailed machine-readable evidence is in `deployments/bounty_forge_acceptance.json`.
+
+## 2 September steward resubmission
+
+Frontend release 3.2 resolves the requested wallet, navigation, and creation blockers without weakening the contract. MetaMask is discovered through EIP-6963 when other wallets are enabled. The landing page, marketplace, creation form, dashboard, bounty detail, and protocol console now have separate routes. Only `deposit` includes transaction value; `create_bounty` omits `value`, passes all five arguments, and spends the caller's recoverable app balance.
+
+A fresh isolated StudioNet run finalized deposit `0x509692c20f5e995acb0b2e478055bfb43caa48254e8225bab6d349f87c122b6e`, successful creation `0xe84b8d351f61b79592871c859c89148cda4d87108f24992c65b210e5439014c5`, rejected foreign cancellation, successful sponsor refund, and rejected duplicate cancellation. The complete steward response and retest path are in `docs/BOUNTYFORGE_RESUBMISSION.md`.

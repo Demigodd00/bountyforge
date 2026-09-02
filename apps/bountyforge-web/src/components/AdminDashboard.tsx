@@ -11,7 +11,7 @@ export default function AdminDashboard() {
     if (CONTRACT_READY) void getAdminData().then(setData).catch((err) => setError(friendlyError(err)));
   }, []);
   return <main className="admin-page">
-    <nav className="nav shell"><a href="/" className="brand"><span className="brand-mark">BF</span><span>Bounty<span className="accent">Forge</span></span></a><a className="button ghost small" href="/">← Back to app</a></nav>
+    <nav className="nav shell"><a href="/" className="brand"><span className="brand-mark">BF</span><span>Bounty<span className="accent">Forge</span></span></a><a className="button ghost small" href="/bounties">← Back to bounties</a></nav>
     <section className="admin shell">
       <p className="eyebrow">READ-ONLY</p><h1>Protocol status.</h1><p className="lede">StudioNet contract and settings.</p>
       {!CONTRACT_READY ? <div className="empty-state"><h3>Contract not configured</h3></div>

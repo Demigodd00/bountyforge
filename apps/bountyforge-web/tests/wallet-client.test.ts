@@ -34,11 +34,14 @@ describe("transaction safety", () => {
     await api.depositCredit(wallet, 10n ** 18n, vi.fn());
     expect(sdk.writeContract).toHaveBeenLastCalledWith(expect.objectContaining({ functionName: "deposit", value: 10n ** 18n, args: [] }));
     await api.createBounty(wallet, input(), vi.fn());
-    expect(sdk.writeContract).toHaveBeenLastCalledWith(expect.objectContaining({ functionName: "create_bounty", value: 0n, args: [input().title, input().criteria, input().issueUrl, expect.any(Number), input().potAtto] }));
+    expect(sdk.writeContract).toHaveBeenLastCalledWith(expect.objectContaining({ functionName: "create_bounty", args: [input().title, input().criteria, input().issueUrl, expect.any(Number), input().potAtto] }));
+    expect(sdk.writeContract.mock.calls.at(-1)![0]).not.toHaveProperty("value");
     await api.submitClaim(wallet, bounty(), "https://github.com/acme/widgets/pull/99", "a".repeat(40), "hunter", vi.fn());
-    expect(sdk.writeContract).toHaveBeenLastCalledWith(expect.objectContaining({ functionName: "submit_claim", value: 0n }));
+    expect(sdk.writeContract).toHaveBeenLastCalledWith(expect.objectContaining({ functionName: "submit_claim" }));
+    expect(sdk.writeContract.mock.calls.at(-1)![0]).not.toHaveProperty("value");
     await api.challengeClaim(wallet, "bf-1", "The stored patch omits the required persistence behavior.", vi.fn());
-    expect(sdk.writeContract).toHaveBeenLastCalledWith(expect.objectContaining({ functionName: "challenge_claim", value: 0n }));
+    expect(sdk.writeContract).toHaveBeenLastCalledWith(expect.objectContaining({ functionName: "challenge_claim" }));
+    expect(sdk.writeContract.mock.calls.at(-1)![0]).not.toHaveProperty("value");
   });
   it("checks available credit before requesting a business-action signature", async () => {
     sdk.readContract.mockImplementation(async ({ functionName }) => functionName === "get_credit" ? "0" : config);
@@ -242,6 +245,44 @@ describe("transaction safety", () => {
 });
 
 describe("wallet events and read pagination", () => {
+  it("restores an authorized wallet without requesting account access again", async () => {
+    Object.defineProperty(window, "ethereum", { configurable: true, value: provider });
+    try {
+      const connected = await api.restoreWallet();
+      expect(connected?.address).toBe(HUNTER);
+      expect(provider.request).toHaveBeenCalledWith({ method: "eth_accounts" });
+      expect(provider.request).not.toHaveBeenCalledWith({ method: "eth_requestAccounts" });
+    } finally { Reflect.deleteProperty(window, "ethereum"); }
+  });
+  it("selects MetaMask through EIP-6963 when another injected wallet is also enabled", async () => {
+    const competingProvider: EthereumProvider = { request: vi.fn(async () => [OTHER]) };
+    const metaMaskProvider: EthereumProvider = {
+      isMetaMask: true,
+      request: vi.fn(async ({ method }) => method === "eth_chainId" ? "0xf22f" : [HUNTER]),
+    };
+    Object.defineProperty(window, "ethereum", { configurable: true, value: competingProvider });
+    const announce = () => {
+      window.dispatchEvent(new CustomEvent("eip6963:announceProvider", { detail: {
+        info: { uuid: "coinbase", name: "Coinbase Wallet", rdns: "com.coinbase.wallet" },
+        provider: competingProvider,
+      } }));
+      window.dispatchEvent(new CustomEvent("eip6963:announceProvider", { detail: {
+        info: { uuid: "metamask", name: "MetaMask", rdns: "io.metamask" },
+        provider: metaMaskProvider,
+      } }));
+    };
+    window.addEventListener("eip6963:requestProvider", announce);
+    try {
+      const connected = await api.connectWallet();
+      expect(connected.provider).toBe(metaMaskProvider);
+      expect(connected.address).toBe(HUNTER);
+      expect(metaMaskProvider.request).toHaveBeenCalledWith({ method: "eth_requestAccounts" });
+      expect(competingProvider.request).not.toHaveBeenCalled();
+    } finally {
+      window.removeEventListener("eip6963:requestProvider", announce);
+      Reflect.deleteProperty(window, "ethereum");
+    }
+  });
   it("subscribes to wallet changes and removes listeners", () => {
     const listeners = new Map<string, (...args: unknown[]) => void>();
     provider.on = (event, listener) => { listeners.set(event, listener); };

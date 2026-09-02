@@ -1,6 +1,6 @@
 # BountyForge release architecture
 
-BountyForge v3.1 is a GenLayer-native settlement protocol for public GitHub work. The contract owns recoverable deposits, escrow, verified claim identity, immutable evidence snapshots, validator agreement, FIFO review, appeal/challenge windows, and terminal payout state. The non-custodial web app forms transactions and displays finalized state; it never decides whether work is complete.
+BountyForge contract v3.1 and frontend v3.2 form a GenLayer-native settlement protocol for public GitHub work. The contract owns recoverable deposits, escrow, verified claim identity, immutable evidence snapshots, validator agreement, FIFO review, appeal/challenge windows, and terminal payout state. The web app forms transactions and displays finalized state; it never decides whether work is complete.
 
 ## Recoverable funding
 
@@ -43,7 +43,9 @@ OPEN
 - Sponsors define criteria and fund escrow. They cannot rewrite an adjudication, seize a stake, or bypass a finalized payout. Their only dispute action is a bonded challenge during the explicit challenge window.
 - Anyone can review the head claim, refund its stake after a review timeout, close an expired rejection appeal, finalize an award, and expire an eligible bounty. A review or timeout still requires somebody to submit the transaction: this release does not include an automated keeper or notifications.
 - The queue cannot advance through an open appeal or provisional award. Rival claims stay pending during a sponsor challenge and become reviewable if the award is overturned. Expiry requires no active claims. The head review window starts when that claim reaches the front, even if the submission deadline has passed.
-- The dApp never handles private keys. It uses an injected wallet, checks the account/network before signing, and waits for finalized successful execution. A confirmation timeout preserves the returned public hash and blocks another write until status is reconciled. If the wallet fails before returning a hash, its activity must be inspected before retrying. Failed forms keep their inputs; confirmed writes are not reported as failed just because refreshing the feed failed.
+- The dApp never handles private keys. It discovers injected providers through EIP-6963, deterministically prefers MetaMask when several wallets coexist, and falls back to the legacy provider list. An already-authorized StudioNet session is restored with `eth_accounts`; explicit connection alone uses `eth_requestAccounts`. Before signing, the app rechecks the exact account and network, then waits for finalized successful execution. A confirmation timeout preserves the returned public hash and blocks another write until status is reconciled. If the wallet fails before returning a hash, its activity must be inspected before retrying. Failed forms keep their inputs; confirmed writes are not reported as failed just because refreshing the feed failed.
+- Product areas use dedicated routes: `/` for the landing page, `/bounties` for discovery, `/post` for creation, `/dashboard` for wallet activity, `/bounties/[id]` for one bounty, and `/admin` for protocol state. Legacy `?bounty=bf-N` links redirect to the canonical detail route.
+- The transaction adapter adds `value` only to `deposit`. It omits the property for `create_bounty` and every other non-payable business method, and a runtime guard rejects any attempted nonzero value outside `deposit`.
 - Only the winning hunter can collect the reward. The sponsor cannot collect on the hunter's behalf. Permissionless finalization and stake-return controls are visible to other connected users when eligible.
 
 ## Evidence and consensus

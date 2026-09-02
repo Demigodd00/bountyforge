@@ -5,9 +5,13 @@ AI-adjudicated open-source bounties, settled on GenLayer.
 [![BountyForge CI](https://github.com/Demigodd00/bountyforge/actions/workflows/ci.yml/badge.svg)](https://github.com/Demigodd00/bountyforge/actions/workflows/ci.yml)
 
 - Live app: [bountyforge-web.vercel.app](https://bountyforge-web.vercel.app)
+- Explore bounties: [bountyforge-web.vercel.app/bounties](https://bountyforge-web.vercel.app/bounties)
+- Create bounty: [bountyforge-web.vercel.app/post](https://bountyforge-web.vercel.app/post)
+- Wallet dashboard: [bountyforge-web.vercel.app/dashboard](https://bountyforge-web.vercel.app/dashboard)
 - Protocol console: [bountyforge-web.vercel.app/admin](https://bountyforge-web.vercel.app/admin)
 - StudioNet contract: `0xf650cB608E02Ec03A0e524078A14C504b56e5c5B`
 - Contract version: `3.1.0`
+- Frontend release: `3.2.0`
 
 > BountyForge is a StudioNet test release using simulated GEN. It is not a mainnet deployment or a guarantee of financial safety.
 
@@ -23,6 +27,8 @@ BountyForge turns a public GitHub issue into an onchain bounty:
 6. Only the winning hunter can claim the finalized reward and recover the claim stake.
 
 GenLayer is central to the workflow: the Intelligent Contract owns deposits, escrow, evidence capture, validator adjudication, queues, disputes, finality, and payout. The frontend only forms transactions and renders finalized state.
+
+Frontend release 3.2 separates the landing page, marketplace, creation flow, dashboard, and bounty details into dedicated routes. It discovers MetaMask with EIP-6963 when multiple wallets are installed, restores an already-authorized wallet without another prompt, and includes a transaction `value` field only for `deposit`. Every business action, including the five-argument `create_bounty`, omits attached GEN and spends recoverable app credit.
 
 ## Verified hosted lifecycle
 
@@ -97,6 +103,7 @@ Never put a private key in the frontend, Vercel, source files, issues, or chat. 
 - [Architecture](docs/architecture/bountyforge.md)
 - [Deployment runbook](docs/BOUNTYFORGE_DEPLOYMENT.md)
 - [Release review](docs/BOUNTYFORGE_REVIEW.md)
+- [Steward resubmission response](docs/BOUNTYFORGE_RESUBMISSION.md)
 - [GenLayer submission](docs/BOUNTYFORGE_SUBMISSION.md)
 
 ## StudioNet acceptance

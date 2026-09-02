@@ -1,6 +1,18 @@
-# BountyForge v3.1 remediation and release review
+# BountyForge v3.2 steward remediation and release review
 
-Date: 2026-08-28. The original nine findings and a further funding defect discovered during live testing have been addressed in v3.1. The verified contract and matching frontend are deployed at [BountyForge](https://bountyforge-web.vercel.app). This remains a StudioNet test release with the acceptance boundary below, not an independent security audit, mainnet approval, or guarantee of financial safety.
+Updated: 2026-09-02. Contract v3.1 retains the previously verified GenLayer protocol. Frontend v3.2 addresses the three steward blockers reported after the first submission. This remains a StudioNet test release with the acceptance boundary below, not an independent security audit, mainnet approval, or guarantee of financial safety.
+
+## Steward-requested v3.2 remediation
+
+| Steward blocker | v3.2 correction | Permanent proof |
+| --- | --- | --- |
+| Multiple browser wallets conflict | Discover providers through EIP-6963 and legacy provider arrays; select the explicitly announced MetaMask provider; restore authorized sessions without a new access prompt | Tests announce MetaMask and a competing provider together, assert only MetaMask is used, and verify passive session restoration |
+| Landing, creation, discovery, and other areas are merged | Dedicated `/`, `/bounties`, `/post`, `/dashboard`, `/bounties/[id]`, and `/admin` routes; old bounty query links redirect to their canonical route | Route-isolation component tests plus the production Next.js route manifest |
+| Creation sends GEN to non-payable `create_bounty` | Only `deposit` may carry `value`; non-payable calls omit the field entirely; creation uses five arguments and spends recoverable contract credit | Transaction-adapter tests, a runtime attached-value guard, and finalized StudioNet transaction `0xe84b8d351f61b79592871c859c89148cda4d87108f24992c65b210e5439014c5` |
+
+The two failed review transactions (`0xf8030a1b9063a76a6ee7f3d94d7f546df9d1eab46a30ae729d16fcc03fe3b2b9` and `0xd4ea845ddb764a613984bebea9d00960f3553dc945247eb1c24933cf41a27145`) each carried 1 GEN and supplied the obsolete four-argument call. The active contract correctly rejected both as non-payable. By contrast, the previously completed hosted flow used five arguments, attached 0 GEN, and created `bf-1` successfully in transaction `0xec523a89bd61f5df5c39be6fd68764352d25cbb47dcf00fa31acbd5b32205a8d`. On 2 September, a fresh isolated StudioNet integration repeated deposit → five-argument creation → authorization checks → sponsor refund and passed in 243.45 seconds.
+
+Frontend release gates now pass 74 tests, TypeScript, the optimized production build, and the production dependency audit. GenVM lint, 65 direct contract tests, and 25 deployment-safety tests also pass. See `docs/BOUNTYFORGE_RESUBMISSION.md` for the concise reviewer retest path.
 
 ## Implemented remediation
 
